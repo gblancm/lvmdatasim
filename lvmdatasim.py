@@ -16,7 +16,7 @@ class LVMSimulator(object):
     Manages the simulation of LVM data
     """
 
-    def __init__ (self, config, input, telescope, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False ):
+    def __init__ (self, config, input, telescope, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
         """ 
         Initialize for Simulator
         """
@@ -24,6 +24,7 @@ class LVMSimulator(object):
         self.psf= self.makepsf(psfmodel)
         self.data= self.readinput()
         self.procdata= self.processinput()
+        self.lenslet_psf = config.lenslet_psf
 
         self.input = input
         self.inputType = input
@@ -83,15 +84,16 @@ class LVMSimulator(object):
         """
         - convolve with a hexagon of the right size given self.telescope.IFUmodel
         """
-        return(fftconvolv(self.data, self.psf, mode="same"))
+        return(fftconvolv(self.data,  lenslet_psf, mode="same"))
 
     def convolvepsf(self):
         if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
             """
             - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
             """
+            convdata = fftconvolv(self.data, self.psf, mode="same")
         else:
-           convdata=procdata
+           convdata=self.procdata
         return convdata
 
 
