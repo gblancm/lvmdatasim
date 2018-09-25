@@ -24,7 +24,7 @@ class LVMSimulator(object):
         self.data= self.readinput()
         self.procdata= self.processinput()
 
-        self.inputype = input
+        self.inputType = input
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
         
@@ -44,7 +44,7 @@ class LVMSimulator(object):
             return psfmodel
 
     def readinput(self):
-        if self.inputype == 'fitscube':
+        if self.inputType == 'fitscube':
             """
             - Read self.input as fits cube, sample, save if requested, and return data
             """
@@ -63,7 +63,7 @@ class LVMSimulator(object):
         return(data)
             
     def processinput(self):
-        if self.inputype == 'fitscube':
+        if self.inputType == 'fitscube':
             """ 
             - sample with lenslets, save if requested, and return processed data, and del(data)
              """
