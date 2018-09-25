@@ -19,20 +19,20 @@ class LVMSimulator(object):
         """ 
         Initialize for Simulator
         """
-        self.telescope=settelescope(telescope)
-        self.psf=makepsf(psfmodel)
-        self.data=readinput()
-        self.procdata=processinput()
+        self.telescope= self.settelescope(telescope)
+        self.psf= self.makepsf(psfmodel)
+        self.data= self.readinput()
+        self.procdata= self.processinput()
         
-    def settelescope(telescope):
+    def settelescope(self, telescope):
         return Telescope()
 
-    def makepsf(psfmodel):
+    def makepsf(self, psfmodel):
         if psfmodel.type() == (float or int):
             """
             Make GAussian 2D PSF
             """
-        elif psfmodel.type() == string:
+        elif isinstance(psfmodel.type(), str):
             """
             Read 2D PSF from fits file
             """
@@ -63,7 +63,7 @@ class LVMSimulator(object):
             """ 
             - sample with lenslets, save if requested, and return processed data, and del(data)
              """
-            procdata=self.convolvelenslet(self.data)
+            procdata=self.convolvelenslet()
         elif self.inputtype == 'sampledcube':
             procdata=data
         elif self.inputtype == 'fitsrss':
