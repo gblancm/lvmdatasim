@@ -8,6 +8,7 @@ from __future__ import print_function, division
 import numpy as np
 import pickle
 import astropy.io.fits as fits
+import scipy.signal.fftconvolv as fftconvolv
 import specsim
 
 class LVMSimulator(object):
@@ -82,9 +83,10 @@ class LVMSimulator(object):
         """
         - convolve with a hexagon of the right size given self.telescope.IFUmodel
         """
+        return(fftconvolv(self.data, self.psf, mode="same"))
 
     def convolvepsf(self):
-        if self.psfmodel is not False and self.inputType == ('fitscube' or 'sampledcube'):
+        if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
             """
             - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
             """
