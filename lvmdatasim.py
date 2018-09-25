@@ -71,11 +71,11 @@ class LVMSimulator(object):
              """
             procdata=self.convolvelenslet()
         elif self.inputType == 'sampledcube':
-            procdata=data
+            procdata=self.data
         elif self.inputType == 'fitsrss':
-            procdata=data
+            procdata=self.data
         elif self.inputType == 'asciirss':
-            procdata=data
+            procdata=self.data
         return(procdata)
         
     def convolvelenslet(self):
