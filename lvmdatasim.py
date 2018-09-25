@@ -84,7 +84,7 @@ class LVMSimulator(object):
         """
         - convolve with a hexagon of the right size given self.telescope.IFUmodel
         """
-        return(fftconvolv(self.data,  lenslet_psf, mode="same"))
+        return(fftconvolv(self.data, self.lenslet_psf, mode="same"))
 
     def convolvepsf(self):
         if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
