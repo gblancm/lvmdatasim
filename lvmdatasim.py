@@ -24,6 +24,7 @@ class LVMSimulator(object):
         self.data= self.readinput()
         self.procdata= self.processinput()
 
+        self.input = input
         self.inputType = input
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
@@ -48,6 +49,7 @@ class LVMSimulator(object):
             """
             - Read self.input as fits cube, sample, save if requested, and return data
             """
+            data = fits.open(self.input)
         elif self.inputType == 'sampledcube':
             """
             - Read self.input as fits cube, do nothing, save if requested, and return data
