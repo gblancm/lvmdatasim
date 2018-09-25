@@ -8,7 +8,7 @@ from __future__ import print_function, division
 import numpy as np
 import pickle
 import astropy.io.fits as fits
-import scipy.signal.fftconvolv as fftconvolv
+import scipy.signal.fftconvolve as fftconvolve
 import specsim
 
 class LVMSimulator(object):
@@ -84,14 +84,14 @@ class LVMSimulator(object):
         """
         - convolve with a hexagon of the right size given self.telescope.IFUmodel
         """
-        return(fftconvolv(self.data, self.lenslet_psf, mode="same"))
+        return(fftconvolve(self.data, self.telescope.ifu.lenslet_psf, mode="same"))
 
     def convolvepsf(self):
         if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
             """
             - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
             """
-            convdata = fftconvolv(self.data, self.psf, mode="same")
+            convdata = fftconvolve(self.data, self.psf, mode="same")
         else:
            convdata=self.procdata
         return convdata
@@ -103,13 +103,8 @@ class LVMSimulator(object):
         """
         self.convdata=self.convolvepsf()
         """
-        Crate the simspec Simulator object
+        Create the simspec Simulator object
         """
-        
-
-
-
-
 
 
     
@@ -120,13 +115,14 @@ class Telescope(object):
         Initialize for Telescope class
         """
         self.site='LCO'
-        self.ifu=lvmdatasim.IFUmodel('science')
+        self.ifu = IFUmodel('science')
 
 
 class IFUmodel(object):
-
+    """Read an existing IFU model stored in the data directory as a pickle"""
     def __init__ (self, ifuname):
-        pickle.load(ifuname+'.pkl')
+        (self.lenslet_psf, self.ifu_xy_positions) = pickle.load(ifuname+'.pkl')
+
         
 
 def main():
