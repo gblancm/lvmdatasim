@@ -15,7 +15,7 @@ class LVMSimulator(object):
     Manages the simulation of LVM data
     """
 
-    def __init__ (self, config, input, telescope, psfmodel, inputtype='fitscube', savelenscube=False, savepsfcube=False ):
+    def __init__ (self, config, input, telescope, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False ):
         """ 
         Initialize for Simulator
         """
@@ -48,15 +48,15 @@ class LVMSimulator(object):
             """
             - Read self.input as fits cube, sample, save if requested, and return data
             """
-        elif self.inputtype == 'sampledcube':
+        elif self.inputType == 'sampledcube':
             """
             - Read self.input as fits cube, do nothing, save if requested, and return data
             """
-        elif self.inputtype == 'fitsrss':
+        elif self.inputType == 'fitsrss':
             """ 
             - Read self.input as fits RSS file with spectra for each spaxel and return data
             """
-        elif self.inputtype == 'asciirss':
+        elif self.inputType == 'asciirss':
             """ 
             - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
             """
@@ -68,11 +68,11 @@ class LVMSimulator(object):
             - sample with lenslets, save if requested, and return processed data, and del(data)
              """
             procdata=self.convolvelenslet()
-        elif self.inputtype == 'sampledcube':
+        elif self.inputType == 'sampledcube':
             procdata=data
-        elif self.inputtype == 'fitsrss':
+        elif self.inputType == 'fitsrss':
             procdata=data
-        elif self.inputtype == 'asciirss':
+        elif self.inputType == 'asciirss':
             procdata=data
         return(procdata)
         
@@ -82,7 +82,7 @@ class LVMSimulator(object):
         """
 
     def convolvepsf(self):
-        if self.psfmodel is not False and self.inputtype == ('fitscube' or 'sampledcube'):
+        if self.psfmodel is not False and self.inputType == ('fitscube' or 'sampledcube'):
             """
             - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
             """
