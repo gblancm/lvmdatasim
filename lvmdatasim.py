@@ -127,17 +127,16 @@ class IFUmodel(object):
 
     def __init__ (self, ifuname):
         pickle.load(ifuname+'.pkl')
-
-
         
 
-        
-
-        
 def main():
-    telescope = lvmdatasim.Telescope()
-    telescope.set_Telescope("lvm160-s")
-    telescope.IFUModel.setNFibers(500)
+    """
+    main: main should do something if someone calls the function form the command line. Perhaps just report the contents of each class
+    """
+    pass
+
+if __name__ == '__main__':
+    main()
 
 
 
