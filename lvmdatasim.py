@@ -25,74 +25,73 @@ class LVMSimulator(object):
     	'psfcube' = psf+lenslet convolved datacube in fits format
     	'fitsrss' = RSS file with one spectrum per lenslet
     	'asciirss' = ascii file with one spectrum per lenslet
+
+
+
+    psfModel: float or int or list or str or None
+        If float or int generates a symmetric 2D Gaussian kernel of FWHM=psfModel
+        If list=[FWHM_a,FWHM_b,theta] and len(list)==3 generates elliptical and rotated Gaussian kernel 
+        If str reads a fits file image as the kernel
+        If None or False no psf convolution is performed
+
     """
 
-    def __init__ (self, config, input, telescopename, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
+    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', saveLensCube=False, savePsfCube=False):
         """ 
         Initialize for Simulator
         """
-        self.telescopename = telescopename
-        self.telescope= self.settelescope()
-        self.psf_model = psfmodel
-        self.psf= self.makepsf(self.psf_model)
-        self.data= self.readinput()
-        self.procdata= self.processinput()
-
         self.input = input
-        self.inputType = input
+        self.inputType = inputType
+        self.telescopeName = telescopeName
+        self.psfModel = psfModel
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
+
+
+        self.data= self.readInput()
+        self.telescope= self.setTelescope()
+        self.procdata= self.processInput()
+        
+
         
     def settelescope(self):
         return Telescope(self.telescopename)
 
-    def makepsf(self, psfmodel):
-        if isinstance(psfmodel, (float or int)):
+    def makeKernel(self, kernelModel):
+        if isinstance(self.psfModel, (float or int)):
             """
-            Make Symetic Gaussian 2D PSF
-            - will use astropy.convolution.Gaussian2DKernel
-            - need to know pixel scale of input cube
-            - therefore only makes sense to run this if inputType is fitscube, lenscube, or psfcube
-            - We won't hardcode a specific PSF so that we can use this both for the lenslet and the sky
-            
+            Make Symmetric Gaussian 2D PSF
+            - Need to calculate the scaling between the plate scale and the PSF model
             """
-
-            # Need to calculate the scaling between the plate scale and the PSF model
             scale = 1.0
-            return(Gaussian2DKernel(x_stddev=scale*psfmodel))
+            return(Gaussian2DKernel(x_stddev=scale*self.psfModel/2.355, mode='integral'))
 
-        elif isinstance(psfmodel, list):
+        elif isinstance(self.psfModel, list):
             """
-            Make GAussian 2D PSF
-            - will use astropy.convolution.Gaussian2DKernel
-            - need to know pixel scale of input cube
-            - therefore only makes sense to run this if inputType is fitscube, lenscube, or psfcube
-            - We won't hardcode a specific PSF so that we can use this both for the lenslet and the sky
+            Make rotated Gaussian 2D elliptical PSF
             
             """
-            # If the PSF model is a list of len 3 we have a 2d asymetric gaussian
-            if len(psfmodel) == 3:
+            if len(self.psfModel) == 3:
                 # Need to calculate the scaling between the plate scale and the PSF model
                 scale = 1.0 # Place holder.
-
                 #Extract PSF model parameters from the list
-                (x_stddev, y_stddev) = psfmodel[0:2]
-                (x_stddev, y_stddev) = (x_stddev*scale, y_stddev*scale)
+                (a_stddev, b_stddev) = psfmodel[0:2]/2.355
+                (a_stddev, b_stddev) = (a_stddev*scale, b_stddev*scale)
                 theta = psfmodel[2]
 
-                return(Gaussian2DKernel(x_stddev=x_stddev, y_stddev=y_stddev, theta=theta))
+                return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='integral'))
             else:
-                sys.exit("The provided PSF model is a list, but not of length three. It can not be interpreted as x_stddev, y_stddev, theta")
+                sys.exit("The provided PSF model is a list, but not of length three. It can not be interpreted as a_FWHM, b_FWHM, theta")
 
-        elif isinstance(psfmodel, str):
+        elif isinstance(self.psfModel, str):
             """
             Read 2D PSF from fits file
             """
-            psf = fits.open(psfmodel)
-            return(psf)
+            psf = fits.open(self.psfModel)
+            return(psf[0].data)
 
-        elif psfmodel is False:
-            return psfmodel
+        elif self.psfmodel is False:
+            return self.psfmodel
 
     def readinput(self):
         if self.inputType == 'fitscube':
@@ -124,7 +123,9 @@ class LVMSimulator(object):
             - sample with lenslets, save if requested, and return processed data, and del(data)
              """
             procdata=self.convolvelenslet()
-        elif self.inputType == 'sampledcube':
+        elif self.inputType == 'lencube':
+            procdata=self.data
+        elif self.inputType == 'psfcube':
             procdata=self.data
         elif self.inputType == 'fitsrss':
             procdata=self.data
@@ -132,18 +133,21 @@ class LVMSimulator(object):
             procdata=self.data
         return(procdata)
         
-    def convolvelenslet(self):
-        """
-        - convolve with a hexagon of the right size given self.telescope.IFUmodel
-        """
-        return(convolve_fft(self.data, self.telescope.ifu.lenslet_psf))
+    def convolveinput(self):
+        if self.psfModel is not (False or None):
+            self.psfKernel= self.makeKernel(self.psfModel)
+            if self.inputType == ('fitscube'):
+                """
+                Connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
+                """            
+                self.kernel=convolve_ftt(self.telescope.IFUmodel.lensletKernel, self.psfKernel)
+            
+            elif self.inputType == ('lenscube'):
+                self.kernel=self.psfKernel 
 
-    def convolvepsf(self):
-        if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
-            """
-            - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
-            """
-            convdata = convolve_fft(self.data, self.psf)
+            convdata = convolve_fft(self.data, kernel, normalize_kernel=True)
+
+
         else:
            convdata=self.procdata
         return convdata
@@ -194,7 +198,7 @@ class Telescope(object):
 class IFUmodel(object):
     """Read an existing IFU model stored in the data directory as a pickle"""
     def __init__ (self, ifuname):
-        (self.lenslet_psf, self.ifu_xy_positions) = pickle.load(ifuname+'.pkl')
+        (self.lensletKernel, self.lensletPositions) = pickle.load(ifuname+'.pkl')
 
         
 
