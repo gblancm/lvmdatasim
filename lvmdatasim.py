@@ -16,12 +16,12 @@ class LVMSimulator(object):
     Manages the simulation of LVM data
     """
 
-    def __init__ (self, config, input, telescope, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
+    def __init__ (self, config, input, telescopename, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
         """ 
         Initialize for Simulator
         """
-        self.telescope= self.settelescope(telescope)
-        self.psf= self.makepsf(psfmodel)
+        self.telescope= self.settelescope()
+        self.psf= self.makepsf()
         self.data= self.readinput()
         self.procdata= self.processinput()
         self.lenslet_psf = config.lenslet_psf
@@ -32,7 +32,7 @@ class LVMSimulator(object):
         self.savepsfcube = savepsfcube
         
     def settelescope(self):
-        return Telescope(self.telescope)
+        return Telescope(self.telescopename)
 
     def makepsf(self):
         if isinstance(self.psfmodel, (float or int)):
@@ -107,7 +107,6 @@ class LVMSimulator(object):
         """
 
 
-    
 class Telescope(object):
     """
     Telescope class:
