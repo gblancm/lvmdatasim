@@ -10,6 +10,7 @@ import pickle
 import astropy.io.fits as fits
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
+import astropy.wcs as wcs
 
 class LVMSimulator(object):
     """
@@ -47,11 +48,11 @@ class LVMSimulator(object):
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
 
-
-        self.data= self.readInput()
+        self.data, self.hdr = self.readInput()
         self.telescope= self.setTelescope()
-        self.procdata= self.processInput()
+        self.convdata= self.convolveInput()
         
+
 
         
     def settelescope(self):
@@ -86,9 +87,27 @@ class LVMSimulator(object):
         elif isinstance(self.psfModel, str):
             """
             Read 2D PSF from fits file
+            - Right now rebining fits kernel with interpolation, it would be better to do an actual integration over a surface fit
             """
-            psf = fits.open(self.psfModel)
-            return(psf[0].data)
+            if self.psfModel.endswith() != ".fits": 
+                sys.exit("psfModel is str but does not end in \".fits\" as expected")
+            else:
+                psf = fits.open(self.psfModel)
+                pixscalepsf=psf.header['PIXSCALE']
+                pixscalecube=self.hdr['PIXSCALE']
+                wcs0=wcs.WCS(naxis=2)
+                wcs0.wcs.crpix=[0,0]
+                wcs0.wcs.crval=[0,0]
+                wcs0.wcs.cdelt=np.full(2, pixscalepsf)
+                wcs1=wcs.WCS(naxis=2)
+                wcs1.wcs.crpix=[0,0]
+                wcs1.wcs.crval=[0,0]
+                wcs1.wcs.cdelt=np.full(2, pixscalecube)
+
+                psf[0].header=wcs0.to_header()
+                psfrebin=reproject_interp(psf, wcs1)
+
+            return(psfrebin[0].data)
 
         elif self.psfmodel is False:
             return self.psfmodel
@@ -97,6 +116,7 @@ class LVMSimulator(object):
         if self.inputType == 'fitscube':
             """
             - Read self.input as fits cube, sample, save if requested, and return data
+            - When we read we add a PIXSCALE keyword to the header before passing it on
             """
             data = fits.open(self.input)
         elif self.inputType == 'lenscube':
@@ -117,22 +137,7 @@ class LVMSimulator(object):
             """
         return(data)
             
-    def processinput(self):
-        if self.inputType == 'fitscube':
-            """ 
-            - sample with lenslets, save if requested, and return processed data, and del(data)
-             """
-            procdata=self.convolvelenslet()
-        elif self.inputType == 'lencube':
-            procdata=self.data
-        elif self.inputType == 'psfcube':
-            procdata=self.data
-        elif self.inputType == 'fitsrss':
-            procdata=self.data
-        elif self.inputType == 'asciirss':
-            procdata=self.data
-        return(procdata)
-        
+    
     def convolveinput(self):
         if self.psfModel is not (False or None):
             self.psfKernel= self.makeKernel(self.psfModel)
@@ -166,14 +171,11 @@ class LVMSimulator(object):
         pass
 
     def lvmsimulate(self):
-        """
-        Convolve with the time averaged focal plane PSF (if necessary)
-        """
-        self.convdata=self.convolvepsf()
+        
         """
         Create the simspec Simulator object
         """
-        self.fluxes = self.get_data_fluxes(self.convdata, x, y) #intentionally broken, x and y are not defined
+        self.fluxes = self.get_data_fluxes(self.convdata, self.telescope.IFUModel.lensletPositions) #intentionally broken, x and y are not defined
 
 
 class Telescope(object):
