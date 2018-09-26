@@ -156,7 +156,7 @@ class LVMSimulator(object):
         'data' = data, sampled data or convolved data
         'center_x' = image pixel coordinate x  where the FOV will be centered and fluxes will be extracted. Default to center
         'center_y' = image pixel coordinate y  where the FOV will be centered and fluxes will be extracted. Default to center
-        potentially self.skycor and telescope model, otherwise
+        potentially self.skycor and telescope model, otherwise use pixel
         """
 
         pass
