@@ -32,7 +32,7 @@ class LVMSimulator(object):
         self.savepsfcube = savepsfcube
         
     def settelescope(self):
-        return Telescope()
+        return Telescope(self.telescope)
 
     def makepsf(self):
         if isinstance(self.psfmodel, (float or int)):
@@ -109,8 +109,17 @@ class LVMSimulator(object):
 
     
 class Telescope(object):
+    """
+    Telescope class:
 
-    def __init__ (self):
+    Parameters:
+    -----------
+
+    name: str
+    	Telescope name. Syntax is LVM[160,1000]-[SCI,CAL,SKY]-[N,S]. So for example, the spectrophotometric
+    	calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
+    """
+    def __init__ (self, name):
         """
         Initialize for Telescope class
         """
