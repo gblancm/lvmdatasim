@@ -31,20 +31,20 @@ class LVMSimulator(object):
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
         
-    def settelescope(self, telescope):
+    def settelescope(self):
         return Telescope()
 
-    def makepsf(self, psfmodel):
-        if isinstance(psfmodel, (float or int)):
+    def makepsf(self):
+        if isinstance(self.psfmodel, (float or int)):
             """
             Make GAussian 2D PSF
             """
-        elif isinstance(psfmodel, str):
+        elif isinstance(self.psfmodel, str):
             """
             Read 2D PSF from fits file
             """
-        elif psfmodel is False:
-            return psfmodel
+        elif self.psfmodel is False:
+            return self.psfmodel
 
     def readinput(self):
         if self.inputType == 'fitscube':
