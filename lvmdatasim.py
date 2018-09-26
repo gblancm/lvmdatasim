@@ -4,11 +4,11 @@ Top-level manager for LVM spectroscopic simulation.
 """
 
 from __future__ import print_function, division
-
+import sys
 import numpy as np
 import pickle
 import astropy.io.fits as fits
-import astropy.convolution as convolution
+from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
 
 class LVMSimulator(object):
@@ -31,8 +31,10 @@ class LVMSimulator(object):
         """ 
         Initialize for Simulator
         """
+        self.telescopename = telescopename
         self.telescope= self.settelescope()
-        self.psf= self.makepsf()
+        self.psf_model = psfmodel
+        self.psf= self.makepsf(self.psf_model)
         self.data= self.readinput()
         self.procdata= self.processinput()
 
@@ -44,21 +46,52 @@ class LVMSimulator(object):
     def settelescope(self):
         return Telescope(self.telescopename)
 
-    def makepsf(self):
-        if isinstance(self.psfmodel, (float or int)):
+    def makepsf(self, psfmodel):
+        if isinstance(psfmodel, (float or int)):
+            """
+            Make Symetic Gaussian 2D PSF
+            - will use astropy.convolution.Gaussian2DKernel
+            - need to know pixel scale of input cube
+            - therefore only makes sense to run this if inputType is fitscube, lenscube, or psfcube
+            - We won't hardcode a specific PSF so that we can use this both for the lenslet and the sky
+            
+            """
+
+            # Need to calculate the scaling between the plate scale and the PSF model
+            scale = 1.0
+            return(Gaussian2DKernel(x_stddev=scale*psfmodel))
+
+        elif isinstance(psfmodel, list):
             """
             Make GAussian 2D PSF
             - will use astropy.convolution.Gaussian2DKernel
             - need to know pixel scale of input cube
             - therefore only makes sense to run this if inputType is fitscube, lenscube, or psfcube
+            - We won't hardcode a specific PSF so that we can use this both for the lenslet and the sky
+            
             """
+            # If the PSF model is a list of len 3 we have a 2d asymetric gaussian
+            if len(psfmodel) == 3:
+                # Need to calculate the scaling between the plate scale and the PSF model
+                scale = 1.0 # Place holder.
 
-        elif isinstance(self.psfmodel, str):
+                #Extract PSF model parameters from the list
+                x_stddev*scale, y_stddev*scale = psfmodel[:2]
+                theta = psfmodel[2]
+
+                return(Gaussian2DKernel(x_stddev=scale*psfmodel))
+            else:
+                sys.exit("The provided PSF model is a list, but not of length three. It can not be interpreted as x_stddev, y_stddev, theta")
+
+        elif isinstance(psfmodel, str):
             """
             Read 2D PSF from fits file
             """
-        elif self.psfmodel is False:
-            return self.psfmodel
+            psf = fits.open(psfmodel)
+            return(psf)
+
+        elif psfmodel is False:
+            return psfmodel
 
     def readinput(self):
         if self.inputType == 'fitscube':
@@ -102,14 +135,14 @@ class LVMSimulator(object):
         """
         - convolve with a hexagon of the right size given self.telescope.IFUmodel
         """
-        return(fftconvolve(self.data, self.telescope.ifu.lenslet_psf, mode="same"))
+        return(convolve_fft(self.data, self.telescope.ifu.lenslet_psf))
 
     def convolvepsf(self):
         if self.psf is not False and self.inputType == ('fitscube' or 'sampledcube'):
             """
             - connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
             """
-            convdata = fftconvolve(self.data, self.psf, mode="same")
+            convdata = convolve_fft(self.data, self.psf)
         else:
            convdata=self.procdata
         return convdata
