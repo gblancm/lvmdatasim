@@ -76,10 +76,11 @@ class LVMSimulator(object):
                 scale = 1.0 # Place holder.
 
                 #Extract PSF model parameters from the list
-                x_stddev*scale, y_stddev*scale = psfmodel[:2]
+                (x_stddev, y_stddev) = psfmodel[0:2]
+                (x_stddev, y_stddev) = (x_stddev*scale, y_stddev*scale)
                 theta = psfmodel[2]
 
-                return(Gaussian2DKernel(x_stddev=scale*psfmodel))
+                return(Gaussian2DKernel(x_stddev=x_stddev, y_stddev=y_stddev, theta=theta))
             else:
                 sys.exit("The provided PSF model is a list, but not of length three. It can not be interpreted as x_stddev, y_stddev, theta")
 
