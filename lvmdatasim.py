@@ -150,11 +150,13 @@ class LVMSimulator(object):
 
     def get_data_fluxes(self, data, center_x, center_y):
         """
-        - Extract the spectral fluxes from data based on the IFU foot print using
-        -- data - allows passing data, sampled data or convolved data
-        -- self.ifu
-        -- center_xy - x,y coordinates in the plane of the sky where the fluxes will be extracted. Default to center
-        -- potentially self.skycor and telescope model, otherwise
+        - Extract the spectral fluxes from data based on the IFU foot print
+        Parameters
+        ----------
+        'data' = data, sampled data or convolved data
+        'center_x' = image pixel coordinate x  where the FOV will be centered and fluxes will be extracted. Default to center
+        'center_y' = image pixel coordinate y  where the FOV will be centered and fluxes will be extracted. Default to center
+        potentially self.skycor and telescope model, otherwise
         """
 
         pass
@@ -167,7 +169,7 @@ class LVMSimulator(object):
         """
         Create the simspec Simulator object
         """
-        self.fluxes = self.get_fluxes()
+        self.fluxes = self.get_data_fluxes(self.convdata, x, y) #intentionally broken, x and y are not defined
 
 
 class Telescope(object):
