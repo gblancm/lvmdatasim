@@ -8,20 +8,31 @@ from __future__ import print_function, division
 import numpy as np
 import pickle
 import astropy.io.fits as fits
-import scipy.signal.fftconvolve as fftconvolve
+import astropy.convolution as convolution
 import specsim
 
 class LVMSimulator(object):
     """
     Manages the simulation of LVM data
+
+    Parameters:
+    -----------
+
+    inputType: str
+    	Can be one of the following:
+    	'fitscube' = native input datacube in fits format
+    	'lenscube' = lenslet convolved datacube in fits format
+    	'psfcube' = psf+lenslet convolved datacube in fits format
+    	'fitsrss' = RSS file with one spectrum per lenslet
+    	'asciirss' = ascii file with one spectrum per lenslet
     """
 
-    def __init__ (self, config, input, telescope, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
+    def __init__ (self, config, input, telescopename, psfmodel, inputType='fitscube', savelenscube=False, savepsfcube=False):
         """ 
         Initialize for Simulator
         """
-        self.telescope= self.settelescope(telescope)
-        self.psf= self.makepsf(psfmodel)
+        self.telescope= self.settelescope()
+        self.psf= self.makepsf()
         self.data= self.readinput()
         self.procdata= self.processinput()
 
@@ -30,20 +41,24 @@ class LVMSimulator(object):
         self.savelenscube = savelenscube
         self.savepsfcube = savepsfcube
         
-    def settelescope(self, telescope):
-        return Telescope()
+    def settelescope(self):
+        return Telescope(self.telescopename)
 
-    def makepsf(self, psfmodel):
-        if isinstance(psfmodel, (float or int)):
+    def makepsf(self):
+        if isinstance(self.psfmodel, (float or int)):
             """
             Make GAussian 2D PSF
+            - will use astropy.convolution.Gaussian2DKernel
+            - need to know pixel scale of input cube
+            - therefore only makes sense to run this if inputType is fitscube, lenscube, or psfcube
             """
-        elif isinstance(psfmodel, str):
+
+        elif isinstance(self.psfmodel, str):
             """
             Read 2D PSF from fits file
             """
-        elif psfmodel is False:
-            return psfmodel
+        elif self.psfmodel is False:
+            return self.psfmodel
 
     def readinput(self):
         if self.inputType == 'fitscube':
@@ -51,7 +66,11 @@ class LVMSimulator(object):
             - Read self.input as fits cube, sample, save if requested, and return data
             """
             data = fits.open(self.input)
-        elif self.inputType == 'sampledcube':
+        elif self.inputType == 'lenscube':
+            """
+            - Read self.input as fits cube, do nothing, save if requested, and return data
+            """
+        elif self.inputType == 'psfcube':
             """
             - Read self.input as fits cube, do nothing, save if requested, and return data
             """
@@ -117,10 +136,18 @@ class LVMSimulator(object):
         self.fluxes = self.get_fluxes()
 
 
-    
 class Telescope(object):
+    """
+    Telescope class:
 
-    def __init__ (self):
+    Parameters:
+    -----------
+
+    name: str
+    	Telescope name. Syntax is LVM[160,1000]-[SCI,CAL,SKY]-[N,S]. So for example, the spectrophotometric
+    	calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
+    """
+    def __init__ (self, name):
         """
         Initialize for Telescope class
         """
