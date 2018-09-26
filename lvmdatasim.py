@@ -24,7 +24,6 @@ class LVMSimulator(object):
         self.psf= self.makepsf(psfmodel)
         self.data= self.readinput()
         self.procdata= self.processinput()
-        self.lenslet_psf = config.lenslet_psf
 
         self.input = input
         self.inputType = input
@@ -96,6 +95,16 @@ class LVMSimulator(object):
            convdata=self.procdata
         return convdata
 
+    def get_data_fluxes(self, data, center_x, center_y):
+        """
+        - Extract the spectral fluxes from data based on the IFU foot print using
+        -- data - allows passing data, sampled data or convolved data
+        -- self.ifu
+        -- center_xy - x,y coordinates in the plane of the sky where the fluxes will be extracted. Default to center
+        -- potentially self.skycor and telescope model, otherwise
+        """
+
+        pass
 
     def lvmsimulate(self):
         """
@@ -105,6 +114,7 @@ class LVMSimulator(object):
         """
         Create the simspec Simulator object
         """
+        self.fluxes = self.get_fluxes()
 
 
     
