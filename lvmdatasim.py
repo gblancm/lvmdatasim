@@ -228,10 +228,10 @@ class Telescope(object):
 
         self.site='LCO'
         self.siteCoordinates = {'LCO':[-29.0146, -17.6926]}
-        self.obstructionA = {"LVM160-SCI-S":0.3} # This number is absolutely a guess.
+        self.obstructionA = {"LVM160-SCI-S":0.3*self.apertureA[self.name]} # This number is absolutely a guess.
         
-        # IFU model: ID, x, y, hexagon radius(center to corner)
-        self.ifu = ascii.read(name+".ifu", format="commented_header")
+        # IFU model object: ID, x, y, hexagon radius(center to corner)
+        self.ifu = IFUModel(self.name)
 
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
