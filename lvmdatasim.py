@@ -7,7 +7,8 @@ from __future__ import print_function, division
 import sys
 import numpy as np
 import pickle
-import astropy.io.fits as fits
+from astropy.io import fits as fits
+from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
 import astropy.wcs as wcs
@@ -179,6 +180,7 @@ class LVMSimulator(object):
 
 
 class Telescope(object):
+    import numpy as np
     """
     Telescope class:
 
@@ -193,9 +195,21 @@ class Telescope(object):
         """
         Initialize for Telescope class
         """
-        self.site='LCO'
-        self.ifu = IFUmodel('science')
+        self.name = name
+        self.aperture = {"LVM160-SCI-S":160}
+        self.apertureA= {"LVM160-SCI-S":np.pi*160}
+        self.fRatio   = {"LVM160-SCI-S":6.2}
 
+        self.site='LCO'
+        self.siteCoordinates = {'LCO':[-29.0146, -17.6926]}
+        self.obstructionA = {"LVM160-SCI-S":0.3} # This number is absolutely a guess.
+        
+        # IFU model: ID, x, y, hexagon radius(center to corner)
+        self.ifu = ascii.read(name+".ifu", format="commented_header")
+
+    def platescale(self, x=0, y=0):
+        """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
+        return(206265/self.apertureA[self.name]/self.fRatio[self.name])
 
 class IFUmodel(object):
     """Read an existing IFU model stored in the data directory as a pickle"""
