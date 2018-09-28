@@ -12,7 +12,8 @@ from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
 import astropy.wcs as wcs
-import hexlib
+import hexagonlib as hexlib
+from PIL import Image, ImageDraw
 
 class LVMSimulator(object):
     """
@@ -130,7 +131,7 @@ Lensed cube should store PA in header, and if imputType=lenscube or psfcube code
         antialias=5
         imgsize*=antialias
         center = imgsize//2+1
-        pointy = hexlib.Layout(hexlib.layout_pointy, rlenspix*antialias, hexlib.Point(center,center))
+        hexLayout = hexlib.Layout(hexlib.layout_pointy, rlenspix*antialias, hexlib.Point(center,center))
         polygon = hexlib.polygon_corners(pointy,hexlib.Hex(0,0,0))
         img = Image.new('L', (imgsize, imgsize), 0)
         ImageDraw.Draw(img).polygon(polygon, outline=1, fill=1)
@@ -236,7 +237,50 @@ class Telescope(object):
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
         return(206265/self.apertureA[self.name]/self.fRatio[self.name])
+
+
+def int_rebin(a, new_shape):
+    """
+    Resizes a 2d array by averaging or repeating elements,
+    new dimensions must be integral factors of original dimensions
+    Parameters
+    ----------
+    a : array_like
+        Input array.
+    new_shape : tuple of int
+        Shape of the output array
+    Returns
+    -------
+    rebinned_array : ndarray
+        If the new shape is smaller of the input array, the data are summed,
+        if the new shape is bigger array elements are repeated and divided
+        by the subsampling factor so that the total sum is conserved.
+    See Also
+    --------
+    resize : Return a new array with the specified shape.
+    Examples
+    --------
+    >>> a = np.array([[0, 1], [2, 3]])
+    >>> b = int_rebin(a, (4, 6)) #upsize
+    >>> b
+    array([[0, 0, 0, 1, 1, 1],
+           [0, 0, 0, 1, 1, 1],
+           [2, 2, 2, 3, 3, 3],
+           [2, 2, 2, 3, 3, 3]])
+    >>> c = rebin(b, (2, 3)) #downsize
+    >>> c
+    array([[ 0. ,  0.5,  1. ],
+           [ 2. ,  2.5,  3. ]])
+    """
+    M, N = a.shape
+    m, n = new_shape
+    if m<M:
+        return a.reshape((m,M//m,n,N//n)).sum(axis=(3,1))
+    else:
+        return np.repeat(np.repeat(a, m//M, axis=0), n//N, axis=1) / (m//M*n//N)
         
+
+
 def main():
     """
     main: main should do something if someone calls the function form the command line. Perhaps just report the contents of each class
