@@ -56,9 +56,9 @@ class LVMSimulator(object):
         self.convdata= self.convolveInput()
         
 
-"""
-Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
-"""
+    """
+    Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
+    """
         
     def settelescope(self):
         return Telescope(self.telescopename)
