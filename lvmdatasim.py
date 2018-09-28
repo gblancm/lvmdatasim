@@ -236,14 +236,7 @@ class Telescope(object):
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
         return(206265/self.apertureA[self.name]/self.fRatio[self.name])
-
-class IFUmodel(object):
-    """Read an existing IFU model stored in the data directory as a pickle"""
-    def __init__ (self, ifuname):
-        (self.lensletKernel, self.lensletPositions) = pickle.load(ifuname+'.pkl')
-
         
-
 def main():
     """
     main: main should do something if someone calls the function form the command line. Perhaps just report the contents of each class
