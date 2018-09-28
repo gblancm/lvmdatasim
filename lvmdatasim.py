@@ -48,8 +48,8 @@ class LVMSimulator(object):
         self.inputType = inputType
         self.telescopeName = telescopeName
         self.psfModel = psfModel
-        self.savelenscube = savelenscube
-        self.savepsfcube = savepsfcube
+        self.saveLensCube = saveLensCube
+        self.savePsfCube = savePsfCube
 
         self.data, self.hdr = self.readInput()
         self.telescope= self.setTelescope()
@@ -60,7 +60,7 @@ class LVMSimulator(object):
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
     """
         
-    def settelescope(self):
+    def setTelescope(self):
         return Telescope(self.telescopename)
 
     def makePsfKernel(self):
@@ -140,7 +140,7 @@ class LVMSimulator(object):
         kernel = int_rebin(kernel, (imgsize//antialias,imgsize//antialias))
         return kernel
 
-    def readinput(self):
+    def readInput(self):
         if self.inputType == 'fitscube':
             """
             - Read self.input as fits cube, sample, save if requested, and return data
