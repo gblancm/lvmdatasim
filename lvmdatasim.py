@@ -8,9 +8,10 @@ import sys
 import numpy as np
 import pickle
 import astropy.io.fits as fits
+import astropy.wcs as wcs
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
-import astropy.wcs as wcs
+import hexlib
 
 class LVMSimulator(object):
     """
@@ -53,12 +54,14 @@ class LVMSimulator(object):
         self.convdata= self.convolveInput()
         
 
-
+"""
+Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
+"""
         
     def settelescope(self):
         return Telescope(self.telescopename)
 
-    def makeKernel(self, kernelModel):
+    def makePsfKernel(self):
         if isinstance(self.psfModel, (float or int)):
             """
             Make Symmetric Gaussian 2D PSF
@@ -112,6 +115,29 @@ class LVMSimulator(object):
         elif self.psfmodel is False:
             return self.psfmodel
 
+    #def makeLensKernel(self, radius,imgsize,antialias=5,debug=False):
+    def makeLensKernel(self):
+        """
+        Generate a 2D numpy array with the characteristic function of a hexagon of size 'radius' (center to corner)
+        in units of pixels of the array. The image will have dimensions of imgsize x imgsize and the hexagon will
+        be at the integer center.
+        """
+        rlensmm=self.telescope.ifu.lensr.mean()
+        rlensarcsec=rlensmm*self.telescope.platescale()
+        rlenspix=rlensarcsec/self.hdr['PIXSCALE']
+        imgsize=2*rlenspix
+        antialias=5
+        imgsize*=antialias
+        center = imgsize//2+1
+        pointy = hexlib.Layout(hexlib.layout_pointy, rlenspix*antialias, hexlib.Point(center,center))
+        polygon = hexlib.polygon_corners(pointy,hexlib.Hex(0,0,0))
+        img = Image.new('L', (imgsize, imgsize), 0)
+        ImageDraw.Draw(img).polygon(polygon, outline=1, fill=1)
+        kernel = np.array(img,dtype=float)
+        kernel /= np.sum(kernel)
+        kernel = int_rebin(kernel, (imgsize//antialias,imgsize//antialias))
+        return kernel
+
     def readinput(self):
         if self.inputType == 'fitscube':
             """
@@ -140,7 +166,7 @@ class LVMSimulator(object):
     
     def convolveinput(self):
         if self.psfModel is not (False or None):
-            self.psfKernel= self.makeKernel(self.psfModel)
+            self.psfKernel= self.makePsfKernel(self.psfModel)
             if self.inputType == ('fitscube'):
                 """
                 Connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
