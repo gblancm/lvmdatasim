@@ -21,6 +21,12 @@ class LVMSimulator(object):
 
     Parameters:
     -----------
+    
+    config: str
+        Configuration file name for simspec
+        
+    input: str
+        path to input data file
 
     inputType: str
     	Can be one of the following:
@@ -30,7 +36,9 @@ class LVMSimulator(object):
     	'fitsrss' = RSS file with one spectrum per lenslet
     	'asciirss' = ascii file with one spectrum per lenslet
 
-
+    telescopeName: str
+        Telescope name. Syntax is LVM[160,1000]-[SCI,CAL,SKY]-[N,S]. So for example, the spectrophotometric
+    	calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
 
     psfModel: float or int or list or str or None
         If float or int generates a symmetric 2D Gaussian kernel of FWHM=psfModel
