@@ -232,20 +232,20 @@ class Telescope(object):
         Initialize for Telescope class
         """
         self.name = name
-        self.aperture = {"LVM160-SCI-S":160}
-        self.apertureA= {"LVM160-SCI-S":np.pi*160}
-        self.fRatio   = {"LVM160-SCI-S":6.2}
+        self.apertureDict = {"LVM160-SCI-S":160}
+        self.apertureADict= {"LVM160-SCI-S":np.pi*160}
+        self.fRatioDict   = {"LVM160-SCI-S":6.2}
 
         self.site='LCO'
-        self.siteCoordinates = {'LCO':[-29.0146, -17.6926]}
-        self.obstructionA = {"LVM160-SCI-S":0.3*self.apertureA[self.name]} # This number is absolutely a guess.
+        self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
+        self.obstructionADict = {"LVM160-SCI-S":0.3*self.apertureADict[self.name]} # This number is absolutely a guess.
         
         # IFU model object: ID, x, y, hexagon radius(center to corner)
         self.ifu = IFUModel(self.name)
 
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
-        return(206265/self.apertureA[self.name]/self.fRatio[self.name])
+        return(206265/self.apertureADict[self.name]/self.fRatioDict[self.name])
 
 
 def int_rebin(a, new_shape):
