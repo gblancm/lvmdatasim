@@ -52,16 +52,12 @@ class LVMSimulator(object):
         self.savePsfCube = savePsfCube
 
         self.data, self.hdr = self.readInput()
-        self.telescope= self.setTelescope()
+        self.telescope= Telescope(None)
         self.convdata= self.convolveInput()
-        
 
     """
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
     """
-        
-    def setTelescope(self):
-        return Telescope(self.telescopename)
 
     def readInput(self):
         if self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
@@ -171,7 +167,7 @@ class LVMSimulator(object):
         return kernel
 
     
-    def convolveinput(self):
+    def convolveInput(self):
         if self.psfModel is not (False or None):
             self.psfKernel= self.makePsfKernel(self.psfModel)
             if self.inputType == ('fitscube'):
@@ -190,7 +186,7 @@ class LVMSimulator(object):
            convdata=self.procdata
         return convdata
 
-    def get_data_fluxes(self, data, center_x, center_y):
+    def getDataFluxes(self, data, center_x, center_y):
         """
         - Extract the spectral fluxes from data based on the IFU foot print
         Parameters
@@ -203,7 +199,7 @@ class LVMSimulator(object):
 
         pass
 
-    def lvmsimulate(self):
+    def lvmSimulate(self):
         
         """
         Create the simspec Simulator object
