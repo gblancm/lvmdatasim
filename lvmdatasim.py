@@ -11,7 +11,7 @@ from astropy.io import fits as fits
 from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
-import IFU as IFUModel
+from IFU import IFUmodel
 import astropy.wcs as wcs
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
@@ -93,7 +93,7 @@ class LVMSimulator(object):
             """ 
             - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
             """
-            data=ascii.open(self.input)
+            data=ascii.read(self.input)
             retrn(data, '')
         else:
             sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
@@ -116,9 +116,9 @@ class LVMSimulator(object):
                 # Need to calculate the scaling between the plate scale and the PSF model
                 scale = 1.0 # Place holder.
                 #Extract PSF model parameters from the list
-                (a_stddev, b_stddev) = psfmodel[0:2]/2.355
+                (a_stddev, b_stddev) = psfModel[0:2]/2.355
                 (a_stddev, b_stddev) = (a_stddev*scale, b_stddev*scale)
-                theta = psfmodel[2]
+                theta = psfModel[2]
 
                 return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='integral'))
             else:
@@ -149,8 +149,8 @@ class LVMSimulator(object):
 
             return(psfrebin[0].data)
 
-        elif self.psfmodel is False:
-            return self.psfmodel
+        elif self.psfModel is False:
+            return self.psfModel
 
     #def makeLensKernel(self, radius,imgsize,antialias=5,debug=False):
     def makeLensKernel(self):
@@ -192,7 +192,7 @@ class LVMSimulator(object):
 
 
         else:
-           convdata=self.procdata
+           convdata=self.procData
         return convdata
 
     def getDataFluxes(self, data, center_x, center_y):
@@ -213,7 +213,7 @@ class LVMSimulator(object):
         """
         Create the simspec Simulator object
         """
-        self.fluxes = self.get_data_fluxes(self.convdata, self.telescope.IFUModel.lensletPositions) #intentionally broken, x and y are not defined
+        self.fluxes = self.getDataFluxes(self.convdata, self.telescope.IFUModel.lensletPositions) #intentionally broken, x and y are not defined
 
 
 class Telescope(object):
