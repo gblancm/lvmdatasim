@@ -70,7 +70,9 @@ class LVMSimulator(object):
             - Add a PIXSCALE keyword to the header if not present before passing it on
             """
             data = fits.open(self.input)
-            if 'PIXSCALE' not in data[0].header.keys():
+            if ('CDELT1' not in data[0].header.keys()) and ('CD1_1' not in data[0].header.keys()):
+                sys.exit('No WCS Information in input FITS header')
+            elif 'PIXSCALE' not in data[0].header.keys(): 
                 mywcs=wcs.WCS(data[0].header)
                 pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()
                 data.header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
@@ -168,9 +170,6 @@ class LVMSimulator(object):
         kernel = int_rebin(kernel, (imgsize//antialias,imgsize//antialias))
         return kernel
 
-
-        
-            
     
     def convolveinput(self):
         if self.psfModel is not (False or None):
