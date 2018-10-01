@@ -6,6 +6,7 @@ class IFUmodel(object):
     'r'= lens radius defined as ???
     """
     def __init__ (self, ifuname):
+        """ Initialize the IFU class"
         self.lensKernel = None
         self.lensx = None
         self.lensy = None
