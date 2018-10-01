@@ -5,16 +5,27 @@ Top-level manager for LVM spectroscopic simulation.
 
 from __future__ import print_function, division
 import sys
+import os
 import numpy as np
 import pickle
 from astropy.io import fits as fits
 from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
-import specsim
-from IFU import IFUmodel
+from reproject import reproject_interp
 import astropy.wcs as wcs
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
+from Telescope import Telescope
+
+try:
+    sys.path.append(os.environ['SIMSPEC_DIR'])
+except:
+    sys.exit("No SIMSPEC_DIR environmental variable defined. Good luck!")
+try:
+    import specsim
+except:
+    sys.exit("The SIMSPEC_DIR environmental varible is defined, but the import of specsim failed: Wrong path or specsim is not installed")
+    
 
 class LVMSimulator(object):
     """
@@ -75,13 +86,13 @@ class LVMSimulator(object):
             - Add a PIXSCALE keyword to the header if not present before passing it on
             """
             data = fits.open(self.input)
-            if ('CDELT1' not in data[0].header.keys()) and ('CD1_1' not in data[0].header.keys()):
+            if ('PIXSCALE' not in data[0].header.keys()) and ('CDELT1' not in data[0].header.keys()) and ('CD1_1' not in data[0].header.keys()):
                 sys.exit('No WCS Information in input FITS header')
             elif 'PIXSCALE' not in data[0].header.keys(): 
                 mywcs=wcs.WCS(data[0].header)
                 pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()
                 data.header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
-            return(data.data, data.header)
+            return(data[0].data, data[0].header)
 
         elif self.inputType == 'fitsrss':
             """ 
@@ -94,18 +105,22 @@ class LVMSimulator(object):
             - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
             """
             data=ascii.read(self.input)
-            retrn(data, '')
+            return(data, '')
         else:
             sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
 
     def makePsfKernel(self):
+        try:
+            pixscalecube = self.hdr['PIXSCALE']
+        except:
+            sys.exit("Something went wrong. You made it this far with no 'PIXSCALE' defined in the data header.")
+
         if isinstance(self.psfModel, (float or int)):
             """
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            scale = 1.0
-            return(Gaussian2DKernel(x_stddev=scale*self.psfModel/2.355, mode='integral'))
+            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
 
         elif isinstance(self.psfModel, list):
             """
@@ -113,12 +128,10 @@ class LVMSimulator(object):
             
             """
             if len(self.psfModel) == 3:
-                # Need to calculate the scaling between the plate scale and the PSF model
-                scale = 1.0 # Place holder.
                 #Extract PSF model parameters from the list
-                (a_stddev, b_stddev) = psfModel[0:2]/2.355
-                (a_stddev, b_stddev) = (a_stddev*scale, b_stddev*scale)
-                theta = psfModel[2]
+                (a_stddev, b_stddev) = self.psfModel[0:2]/2.355
+                (a_stddev, b_stddev) = (a_stddev*pixscalecube, b_stddev*pixscalecube)
+                theta = self.psfModel[2]
 
                 return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='integral'))
             else:
@@ -134,7 +147,6 @@ class LVMSimulator(object):
             else:
                 psf = fits.open(self.psfModel)
                 pixscalepsf=psf.header['PIXSCALE']
-                pixscalecube=self.hdr['PIXSCALE']
                 wcs0=wcs.WCS(naxis=2)
                 wcs0.wcs.crpix=[0,0]
                 wcs0.wcs.crval=[0,0]
@@ -167,7 +179,7 @@ class LVMSimulator(object):
         imgsize*=antialias
         center = imgsize//2+1
         hexLayout = hexlib.Layout(hexlib.layout_pointy, rlenspix*antialias, hexlib.Point(center,center))
-        polygon = hexlib.polygon_corners(pointy,hexlib.Hex(0,0,0))
+        polygon = hexlib.polygon_corners(hexLayout,hexlib.Hex(0,0,0))
         img = Image.new('L', (imgsize, imgsize), 0)
         ImageDraw.Draw(img).polygon(polygon, outline=1, fill=1)
         kernel = np.array(img,dtype=float)
@@ -178,31 +190,32 @@ class LVMSimulator(object):
     
     def convolveInput(self):
         if self.psfModel is not (False or None):
-            self.psfKernel= self.makePsfKernel(self.psfModel)
+            self.psfKernel= self.makePsfKernel()
             if self.inputType == ('fitscube'):
                 """
                 Connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
                 """            
-                self.kernel=convolve_ftt(self.telescope.IFUmodel.lensletKernel, self.psfKernel)
+                self.kernel=convolve_fft(self.telescope.ifu.lensKernel, self.psfKernel)
             
             elif self.inputType == ('lenscube'):
                 self.kernel=self.psfKernel 
 
-            convdata = convolve_fft(self.data, kernel, normalize_kernel=True)
-
+            convdata = convolve_fft(self.data, self.kernel, normalize_kernel=True)
 
         else:
-           convdata=self.procData
+            # The data either pre-processed, or is in a format that does not require processing/convolution.
+           convdata=self.data
         return convdata
 
-    def getDataFluxes(self, data, center_x, center_y):
+    def getDataFluxes(self):
         """
         - Extract the spectral fluxes from data based on the IFU foot print
-        Parameters
+        Main Dependent Parameters
         ----------
-        'data' = data, sampled data or convolved data
-        'center_x' = image pixel coordinate x  where the FOV will be centered and fluxes will be extracted. Default to center
-        'center_y' = image pixel coordinate y  where the FOV will be centered and fluxes will be extracted. Default to center
+        'self.data' = data, sampled data or convolved data
+        'self.telescope.ifu.lensx' = image pixel coordinate x  where the FOV will be centered and fluxes will be extracted. Default to center
+        'self.telescope.ifu.lensy' = image pixel coordinate y  where the FOV will be centered and fluxes will be extracted. Default to center
+        'self.telescope.ifu.lensr' = hexagon radius: This does not result in a convolution of the image with each indivdual PSF of each lens. That's too expensive. What is done is to scale the fluxes of an indivudal fiber by the area of the average lens size.
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
@@ -213,40 +226,7 @@ class LVMSimulator(object):
         """
         Create the simspec Simulator object
         """
-        self.fluxes = self.getDataFluxes(self.convdata, self.telescope.IFUModel.lensletPositions) #intentionally broken, x and y are not defined
-
-
-class Telescope(object):
-    import numpy as np
-    """
-    Telescope class:
-
-    Parameters:
-    -----------
-
-    name: str
-    	Telescope name. Syntax is LVM[160,1000]-[SCI,CAL,SKY]-[N,S]. So for example, the spectrophotometric
-    	calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
-    """
-    def __init__ (self, name):
-        """
-        Initialize for Telescope class
-        """
-        self.name = name
-        self.apertureDict = {"LVM160-SCI-S":160}
-        self.apertureADict= {"LVM160-SCI-S":np.pi*160}
-        self.fRatioDict   = {"LVM160-SCI-S":6.2}
-
-        self.site='LCO'
-        self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
-        self.obstructionADict = {"LVM160-SCI-S":0.3*self.apertureADict[self.name]} # This number is absolutely a guess.
-        
-        # IFU model object: ID, x, y, hexagon radius(center to corner)
-        self.ifu = IFUModel(self.name)
-
-    def platescale(self, x=0, y=0):
-        """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
-        return(206265/self.apertureADict[self.name]/self.fRatioDict[self.name])
+        self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
 
 
 def int_rebin(a, new_shape):
