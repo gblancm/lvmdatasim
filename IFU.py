@@ -1,4 +1,4 @@
-class IFUmodel(object):
+class IFU(object):
     """Read an existing IFU model stored in the data directory as a pickle
     'ID'= lens id
     'x'= x position in focal plane
