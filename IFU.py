@@ -2,19 +2,19 @@ class IFU(object):
     """Read an existing IFU model stored in the data directory as a pickle
     Internal Parameters
     ----------
-    ID: array (init=None)
+    ID: array
         array of lens IDs in the focal plane
-    blockID: array (init=None)
+    blockID: array 
         IFU block number 
-    blockN: array (init=None)
+    blockN: array
         Fiber ID in the block
     x: array
         x-position in focal plane
     y: array
         y-position in focal plane
     r: array
-        lens radius defined as ???
-    lensKernel: 2d-array (init to None)
+        lens radius defined as average radius from center to corner
+    lensKernel: 2d-array
         Place holder to store a 2d-array lens kernel 
         calculated from the analytic hexagon and 
         the datacube PIXSCALE
