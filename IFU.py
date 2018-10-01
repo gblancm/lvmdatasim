@@ -12,3 +12,4 @@ class IFU(object):
         self.lensy = None
         self.lensr = None
         self.lensID= None
+        self.blockID= None
