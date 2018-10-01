@@ -11,6 +11,7 @@ from astropy.io import fits as fits
 from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 import specsim
+import IFU as IFUModel
 import astropy.wcs as wcs
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
