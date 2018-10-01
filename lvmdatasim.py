@@ -59,6 +59,34 @@ class LVMSimulator(object):
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
     """
 
+    def readInput(self):
+        if self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
+            """
+            - Read self.input as fits cube and return data and header
+            - Add a PIXSCALE keyword to the header if not present before passing it on
+            """
+            data = fits.open(self.input)
+            if 'PIXSCALE' not in data[0].header.keys():
+                mywcs=wcs.WCS(data[0].header)
+                pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()
+                data.header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
+            return(data.data, data.header)
+
+        elif self.inputType == 'fitsrss':
+            """ 
+            - Read self.input as fits RSS file with spectra for each spaxel and return data
+            """
+            data = fits.open(self.input)
+            return(data.data, data.header)
+        elif self.inputType == 'asciirss':
+            """ 
+            - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
+            """
+            data=ascii.open(self.input)
+            retrn(data, '')
+        else:
+            sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
+
     def makePsfKernel(self):
         if isinstance(self.psfModel, (float or int)):
             """
@@ -136,30 +164,8 @@ class LVMSimulator(object):
         kernel = int_rebin(kernel, (imgsize//antialias,imgsize//antialias))
         return kernel
 
-    def readInput(self):
-        if self.inputType == 'fitscube':
-            """
-            - Read self.input as fits cube, sample, save if requested, and return data
-            - When we read we add a PIXSCALE keyword to the header before passing it on
-            """
-            data = fits.open(self.input)
-        elif self.inputType == 'lenscube':
-            """
-            - Read self.input as fits cube, do nothing, save if requested, and return data
-            """
-        elif self.inputType == 'psfcube':
-            """
-            - Read self.input as fits cube, do nothing, save if requested, and return data
-            """
-        elif self.inputType == 'fitsrss':
-            """ 
-            - Read self.input as fits RSS file with spectra for each spaxel and return data
-            """
-        elif self.inputType == 'asciirss':
-            """ 
-            - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
-            """
-        return(data)
+
+        
             
     
     def convolveInput(self):
