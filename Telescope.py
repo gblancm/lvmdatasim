@@ -16,15 +16,22 @@ class Telescope(object):
     def __init__ (self, name):
         """
         Initialize for Telescope class
+        Uses hardcoded dictionaries and atributes are set using telescope name as key
         """
-        self.name = name
+        self.siteDict = {"LVM160-SCI-S":"LCO"}
+        self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
         self.apertureDict = {"LVM160-SCI-S":160}
-        self.apertureADict= {"LVM160-SCI-S":np.pi*160}
+        self.apertureAreaDict= {"LVM160-SCI-S":np.pi*160}
+        self.obstructionAreaDict = {"LVM160-SCI-S":0.3*self.apertureADict[self.name]} # This number is absolutely a guess.
         self.fRatioDict   = {"LVM160-SCI-S":6.2}
 
-        self.site='LCO'
-        self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
-        self.obstructionADict = {"LVM160-SCI-S":0.3*self.apertureADict[self.name]} # This number is absolutely a guess.
+        self.name = name
+        self.site = self.siteDict[self.name]
+        self.siteCoordinates = self.siteCoordinatesDict[self.name]
+        self.aperture = self.siteDict[self.name]
+        self.apertureArea = self.apertureDict[self.name]
+        self.obstructionArea = self.obstructionDict[self.name]
+        self.fRatio = self.fRatioDict[self.name]
         
         # IFU model object: ID, x, y, hexagon radius(center to corner)
         self.ifu = IFU(self.name)

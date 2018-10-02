@@ -247,11 +247,15 @@ class LVMSimulator(object):
             # resample data to output wavelength sampling
 
 
+        """Deal with fluxType
+        """
         if self.fluxType == 'intensity':
-        # Multiply input spaxel area in arcsec2
+            """Multiply input spaxel area in arcsec2
+            """
             return(output*lensareasky)
         elif self.fluxType == 'flux':
-        # Multiply input by  spaxel area in pixels
+            """Multiply input by  spaxel area in pixels
+            """
             return(output*lensareapix) 
 
 
