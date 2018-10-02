@@ -271,13 +271,10 @@ class LVMSimulator(object):
             # resample data to output wavelength sampling
             """Deal with fluxType
             """
-            thetarad=self.exposure.theta*np.pi/180. # position angle in radians
-            rot=np.array([[np.cos(thetarad), np.sin(thetarad)],[-np.sin(thetarad), np.cos(thetarad)]])
-            
+            lensra, lensdec = self.ifu2sky()
 
-
-            lensdec=self.exposure.dec+slef.telescope.ifu.lensy
-
+            """missing part whereI sample cube at right position
+            """
 
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
@@ -288,6 +285,14 @@ class LVMSimulator(object):
                 """Multiply input by  spaxel area in pixels
                 """
                 fluxout *= lensareapix
+
+    def ifu2sky(self):
+            thetarad=self.exposure.theta*np.pi/180. # position angle in radians
+            rotlensx=np.cos(thetarad)*self.telescope.ifu.lensx+np.sin(thetarad)*self.telescope.lensy
+            rotlensy=-np.sin(thetarad)*self.telescope.ifu.lensx+np.cos(thetarad)*self.telescope.lensy
+            lensdec=self.exposure.dec+rotlensy*self.telescope.platescale(rotlensx, rotlensy)/3600.
+            lensra=self.exposure.ra+rotlensx*self.telescope.platescale(rotlensx, rotlensy)/3600./np.cos(lensdec*np.pi/180.)
+            return(lensra, lensdec)
 
 
     def lvmSimulate(self):
