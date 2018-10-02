@@ -64,7 +64,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvcube=True, wavegrid=[3550.0, 9850.0, 0.1]):
+    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1]):
         """ 
         Initialize for Simulator
         """
@@ -73,8 +73,7 @@ class LVMSimulator(object):
         self.fluxType = fluxType
         self.telescopeName = telescopeName
         self.psfModel = psfModel
-        self.saveLensCube = saveLensCube
-        self.savePsfCube = savePsfCube
+        self.saveConvCube = saveConvCube
 
         self.data, self.hdr = self.readInput()
         
