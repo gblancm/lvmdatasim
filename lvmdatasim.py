@@ -9,13 +9,13 @@ import os
 import numpy as np
 import pickle
 from astropy.io import fits as fits
-from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 from reproject import reproject_interp
 import astropy.wcs as wcs
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
 from Telescope import Telescope
+import scipy.interpolate as interpolate
 
 try:
     sys.path.append(os.environ['SIMSPEC_DIR'])
@@ -40,17 +40,9 @@ class LVMSimulator(object):
     input: str
         path to input data file
 
-    inputType: str
-    	Can be one of the following:
-    	'fitscube' = native input datacube in fits format
-    	'lenscube' = lenslet convolved datacube in fits format
-    	'psfcube' = psf+lenslet convolved datacube in fits format
-    	'fitsrss' = RSS file with one spectrum per lenslet
-    	'asciirss' = ascii file with one spectrum per lenslet
-
     telescopeName: str
         Telescope name. Syntax is LVM[160,1000]-[SCI,CAL,SKY]-[N,S]. So for example, the spectrophotometric
-    	calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
+        calibration 0.16m telescope at LCO (i.e. South) would be "LVM160-CAL-S"
 
     psfModel: float or int or list or str or None
         If float or int generates a symmetric 2D Gaussian kernel of FWHM=psfModel
@@ -58,22 +50,45 @@ class LVMSimulator(object):
         If str reads a fits file image as the kernel
         If None or False no psf convolution is performed
 
+    inputType: str
+    	Can be one of the following:
+    	'fitscube' = native input datacube in fits format
+    	'lenscube' = lenslet convolved datacube in fits format
+    	'psfcube' = psf+lenslet convolved datacube in fits format
+    	'fitsrss' = RSS file with one spectrum per lenslet, first row is wavelength in A
+    	'asciirss' = ascii file with one spectrum per lenslet, first column is wavelength in A, headers must be commented with "#"
+
+    fluxType: str
+        Can be one of the following:
+        'intensity' = input is assumed to be in units of erg/s/cm2/arcsec2 (for both cubes and RSS files)
+        'flux' = input is assumed to be in units of erg/s/cm2/pixel (for cubes) or erg/s/cm2 (for RSS files)
+
     """
 
-    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', saveLensCube=False, savePsfCube=False):
+    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1]):
         """ 
         Initialize for Simulator
         """
         self.input = input
         self.inputType = inputType
+        self.fluxType = fluxType
         self.telescopeName = telescopeName
         self.psfModel = psfModel
-        self.saveLensCube = saveLensCube
-        self.savePsfCube = savePsfCube
+        self.saveConvCube = saveConvCube
 
         self.data, self.hdr = self.readInput()
-        self.telescope= Telescope(None)
-        self.convdata= self.convolveInput()
+        
+        self.telescope = Telescope(telescopeName)
+        self.config=specsim.config('lvm', num_fibers=len(self.telescope.ifu.lensID))
+        self.exposure = Exposure()
+        """ still need to define how user sets parameters of exposure and simulation"
+        """
+        self.updateconfig()
+
+
+
+        self.convdata = self.convolveInput()
+
 
     """
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
@@ -104,7 +119,7 @@ class LVMSimulator(object):
             """ 
             - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
             """
-            data=ascii.read(self.input)
+            data=np.genfromtxt(self.input, comments="#", unpack=True)
             return(data, '')
         else:
             sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
@@ -164,7 +179,14 @@ class LVMSimulator(object):
         elif self.psfModel is False:
             return self.psfModel
 
-    #def makeLensKernel(self, radius,imgsize,antialias=5,debug=False):
+    def updateconfig(self):
+        """this method updates the specsim config object with the user defined parameters
+        """
+
+    def updatesimulator(self):
+        """this method updates the specsim simulator object with the user defined parameters
+        """
+
     def makeLensKernel(self):
         """
         Generate a 2D numpy array with the characteristic function of a hexagon of size 'radius' (center to corner)
@@ -194,7 +216,8 @@ class LVMSimulator(object):
             if self.inputType == ('fitscube'):
                 """
                 Connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
-                """            
+                """
+                self.telescope.ifu.lensKernel=self.makeLensKernel()            
                 self.kernel=convolve_fft(self.telescope.ifu.lensKernel, self.psfKernel)
             
             elif self.inputType == ('lenscube'):
@@ -209,7 +232,13 @@ class LVMSimulator(object):
 
     def getDataFluxes(self):
         """
-        - Extract the spectral fluxes from data based on the IFU foot print
+        - Extract the spectral fluxes from data. 
+        - If working on cube sample convolved cube at lenslet positions and scale fluxes by lenslet area with respect to average lenslet area
+        - This version does not correct for DAR!!!!!
+        - If working on an RSS file simply pass on the fluxes for each spaxel
+        - Return a 2D np array of dimensions (Nspax, Nwave) in the format needed by specsim (do in one step, check scipy.interpolate.interp1d)
+        -
+
         Main Dependent Parameters
         ----------
         'self.data' = data, sampled data or convolved data
@@ -219,14 +248,57 @@ class LVMSimulator(object):
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
-        pass
+        waveout=self.config.wavelength.value
+        nlens=len(self.telescope.ifu.lensID)
+        lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
+        lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
+        lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
+        lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
+                
+        if self.inputType == ('fitsrss' or 'asciirss')
+            wavein=self.convdata[0,:]
+            fluxesin=self.convdata[1:,:]            
+            interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
+            fluxesout=interp(np.range(nlens), waveout)
+
+            if self.fluxType == 'intensity':
+                """Multiply input spaxel area in arcsec2
+                """
+                fluxesout *= lensareasky 
+
+        elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube')
+            # compute lenslet coordinates, do mask, evaluate spectra
+            # resample data to output wavelength sampling
+            """Deal with fluxType
+            """
+            thetarad=self.exposure.theta*np.pi/180. # position angle in radians
+            rot=np.array([[np.cos(thetarad), np.sin(thetarad)],[-np.sin(thetarad), np.cos(thetarad)]])
+            
+
+
+            lensdec=self.exposure.dec+slef.telescope.ifu.lensy
+
+
+            if self.fluxType == 'intensity':
+                """Multiply input spaxel area in arcsec2
+                """
+                fluxout *= lensareasky
+
+            elif self.fluxType == 'flux':
+                """Multiply input by  spaxel area in pixels
+                """
+                fluxout *= lensareapix
+
 
     def lvmSimulate(self):
         
         """
-        Create the simspec Simulator object
+        Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
+        self.simulator = specsim.simulator.Simulator(self.config)
+        self.updatesimulator()
+        self.simulator.simulate()
 
 
 def int_rebin(a, new_shape):
