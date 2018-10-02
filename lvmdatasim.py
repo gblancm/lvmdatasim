@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pickle
 from astropy.io import fits as fits
-from astropy.io import ascii as ascii
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 from reproject import reproject_interp
 import astropy.wcs as wcs
@@ -55,8 +54,8 @@ class LVMSimulator(object):
     	'fitscube' = native input datacube in fits format
     	'lenscube' = lenslet convolved datacube in fits format
     	'psfcube' = psf+lenslet convolved datacube in fits format
-    	'fitsrss' = RSS file with one spectrum per lenslet
-    	'asciirss' = ascii file with one spectrum per lenslet
+    	'fitsrss' = RSS file with one spectrum per lenslet, first row is wavelength in A
+    	'asciirss' = ascii file with one spectrum per lenslet, first column is wavelength in A, headers must be commented with "#"
 
     fluxType: str
         Can be one of the following:
@@ -78,8 +77,12 @@ class LVMSimulator(object):
         self.savePsfCube = savePsfCube
 
         self.data, self.hdr = self.readInput()
-        self.telescope= Telescope(None)
-        self.convdata= self.convolveInput()
+        
+        self.telescope = Telescope(telescopeName)
+        self.specism=specsim.Simulator(config, num_fibers=len(self.telescope.ifu.lensID))
+        self.exposure = Exposure()
+        self.convdata = self.convolveInput()
+
 
     """
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
@@ -110,7 +113,7 @@ class LVMSimulator(object):
             """ 
             - Read self.input as ascii file with one spectrum per each spaxel (1st column = wavelength, each following column is one spectrum), and return data
             """
-            data=ascii.read(self.input)
+            data=np.genfromtxt(self.input, comments="#", unpack=True)
             return(data, '')
         else:
             sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
@@ -232,32 +235,36 @@ class LVMSimulator(object):
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
-        nlens=len(self.telescope.ifu.lensid)
-        """  nwave should come from the simspec parameters, this is a placeholder
-        """
         lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
         lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
         lensareasky=3*np.sqrt(3)*lensrsky**2/2
         lensareapix=3*np.sqrt(3)*lensrpix**2/2
 
-        if self.inputType == ('fitsrss' or 'asciirss'):
+        if self.inputType == ('fitsrss')
+            wave=self.convdata[0,:]
+
+
+        elif sel..inpuType == ('asciirss'):
+
+
             # resample data to output wavelength sampling
         elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube')
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
-
-
-        """Deal with fluxType
-        """
-        if self.fluxType == 'intensity':
-            """Multiply input spaxel area in arcsec2
+            """Deal with fluxType
             """
-            return(output*lensareasky)
-        elif self.fluxType == 'flux':
-            """Multiply input by  spaxel area in pixels
-            """
-            return(output*lensareapix) 
+            if self.fluxType == 'intensity':
+                """Multiply input spaxel area in arcsec2
+                """
+                return(output*lensareasky)
+            elif self.fluxType == 'flux':
+                """Multiply input by  spaxel area in pixels
+                """
+                return(output*lensareapix) 
 
+
+
+        
 
     def lvmSimulate(self):
         

@@ -12,3 +12,7 @@ class Exposure(object):
 	def __init__(self):
 
 		self.exptime=900
+		self.ra
+		self.dec
+		self.theta
+		
