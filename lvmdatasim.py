@@ -15,6 +15,7 @@ import astropy.wcs as wcs
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
 from Telescope import Telescope
+import scipy.interpolate as interpolate
 
 try:
     sys.path.append(os.environ['SIMSPEC_DIR'])
@@ -247,32 +248,46 @@ class LVMSimulator(object):
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
+        waveout=self.config.wavelength.value
+        nlens=len(self.telescope.ifu.lensID)
         lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
+        lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
         lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
-        lensareasky=3*np.sqrt(3)*lensrsky**2/2
-        lensareapix=3*np.sqrt(3)*lensrpix**2/2
+        lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
+                
+        if self.inputType == ('fitsrss' or 'asciirss')
+            wavein=self.convdata[0,:]
+            fluxesin=self.convdata[1:,:]            
+            interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
+            fluxesout=interp(np.range(nlens), waveout)
 
-        if self.inputType == ('fitsrss')
-            wave=self.convdata[0,:]
+            if self.fluxType == 'intensity':
+                """Multiply input spaxel area in arcsec2
+                """
+                fluxesout *= lensareasky 
 
-
-        elif sel..inpuType == ('asciirss'):
-
-
-            # resample data to output wavelength sampling
         elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube')
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
             """Deal with fluxType
             """
+            thetarad=self.exposure.theta*np.pi/180. # position angle in radians
+            rot=np.array([[np.cos(thetarad), np.sin(thetarad)],[-np.sin(thetarad), np.cos(thetarad)]])
+            
+
+
+            lensdec=self.exposure.dec+slef.telescope.ifu.lensy
+
+
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
-                return(output*lensareasky)
+                fluxout *= lensareasky
+
             elif self.fluxType == 'flux':
                 """Multiply input by  spaxel area in pixels
                 """
-                return(output*lensareapix) 
+                fluxout *= lensareapix
 
 
     def lvmSimulate(self):
