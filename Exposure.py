@@ -11,8 +11,9 @@ class Exposure(object):
 
 	def __init__(self):
 
-		self.exptime=900
-		self.ra
-		self.dec
-		self.theta
-		
+		self.exptime = 900
+		self.ra = 0.0
+		self.dec = 0.0
+		self.theta = 0.0
+		self.airmass = 1.0
+

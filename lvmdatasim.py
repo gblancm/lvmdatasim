@@ -64,7 +64,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveLensCube=False, savePsfCube=False):
+    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvcube=True, wavegrid=[3550.0, 9850.0, 0.1]):
         """ 
         Initialize for Simulator
         """
@@ -79,8 +79,14 @@ class LVMSimulator(object):
         self.data, self.hdr = self.readInput()
         
         self.telescope = Telescope(telescopeName)
-        self.specism=specsim.Simulator(config, num_fibers=len(self.telescope.ifu.lensID))
+        self.config=specsim.config('lvm', num_fibers=len(self.telescope.ifu.lensID))
         self.exposure = Exposure()
+        """ still need to define how user sets parameters of exposure and simulation"
+        """
+        self.updateconfig()
+
+
+
         self.convdata = self.convolveInput()
 
 
@@ -173,7 +179,14 @@ class LVMSimulator(object):
         elif self.psfModel is False:
             return self.psfModel
 
-    #def makeLensKernel(self, radius,imgsize,antialias=5,debug=False):
+    def updateconfig(self):
+        """this method updates the specsim config object with the user defined parameters
+        """
+
+    def updatesimulator(self):
+        """this method updates the specsim simulator object with the user defined parameters
+        """
+
     def makeLensKernel(self):
         """
         Generate a 2D numpy array with the characteristic function of a hexagon of size 'radius' (center to corner)
@@ -263,15 +276,15 @@ class LVMSimulator(object):
                 return(output*lensareapix) 
 
 
-
-        
-
     def lvmSimulate(self):
         
         """
-        Create the simspec Simulator object
+        Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
+        self.simulator = specsim.simulator.Simulator(self.config)
+        self.updatesimulator()
+        self.simulator.simulate()
 
 
 def int_rebin(a, new_shape):
