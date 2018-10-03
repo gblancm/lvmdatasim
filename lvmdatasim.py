@@ -16,6 +16,7 @@ import hexagonlib as hexlib
 from PIL import Image, ImageDraw
 from Telescope import Telescope
 import scipy.interpolate as interpolate
+from Exposure import Exposure
 
 try:
     sys.path.append(os.environ['SIMSPEC_DIR'])
@@ -255,7 +256,7 @@ class LVMSimulator(object):
         lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
         lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
                 
-        if self.inputType == ('fitsrss' or 'asciirss')
+        if self.inputType == ('fitsrss' or 'asciirss'):
             wavein=self.convdata[0,:]
             fluxesin=self.convdata[1:,:]            
             interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
@@ -266,15 +267,19 @@ class LVMSimulator(object):
                 """
                 fluxesout *= lensareasky 
 
-        elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube')
+        elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
             """Deal with fluxType
             """
-            lensra, lensdec = self.ifu2sky()
+            lensra, lensdec = self.telescope.ifu2sky(self.exposure.ra, self.exposure.dec,self.expsosure.theta)
 
             """missing part whereI sample cube at right position
             """
+            mywcs = wcs.WCS(self.hdr)
+            pixelCoordinates = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
+
+            fluxout=np.zeros((nlens, len(waveout)))
 
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
@@ -285,15 +290,6 @@ class LVMSimulator(object):
                 """Multiply input by  spaxel area in pixels
                 """
                 fluxout *= lensareapix
-
-    def ifu2sky(self):
-            thetarad=self.exposure.theta*np.pi/180. # position angle in radians
-            rotlensx=np.cos(thetarad)*self.telescope.ifu.lensx+np.sin(thetarad)*self.telescope.lensy
-            rotlensy=-np.sin(thetarad)*self.telescope.ifu.lensx+np.cos(thetarad)*self.telescope.lensy
-            lensdec=self.exposure.dec+rotlensy*self.telescope.platescale(rotlensx, rotlensy)/3600.
-            lensra=self.exposure.ra+rotlensx*self.telescope.platescale(rotlensx, rotlensy)/3600./np.cos(lensdec*np.pi/180.)
-            return(lensra, lensdec)
-
 
     def lvmSimulate(self):
         
