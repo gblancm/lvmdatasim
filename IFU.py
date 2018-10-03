@@ -44,14 +44,15 @@ class IFU(object):
                 self.ifuModel = int(self.ifuModel)
             else:
                 sys.exit("Number of elements requested is not a integer number")
+            self.lenspitch = 0.174 # in mm
             self.lensx = None
             self.lensy = None
-            self.lensr = None
+            self.lensr = 0.160 # in mm
             self.cubex = None # this will be blank if the ifu model is read from a table
             self.cubey = None # this will be blank if the ifu model is read from a table
             self.ring = None # this MAY be blank if the ifu model is read from a table
             self.lensT = 1.0
-            self.hexLayout = hexlib.Layout(hexlib.layout_flat, 1.0, hexlib.Point(0,0))
+            self.hexLayout = hexlib.Layout(hexlib.layout_flat, self.lenspitch, hexlib.Point(0,0))
             self.mkIfu(N=self.ifuModel)
         elif isinstance(self.ifuModel, str):
             try:
