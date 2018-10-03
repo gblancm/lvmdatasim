@@ -79,12 +79,11 @@ class LVMSimulator(object):
 
         self.data, self.hdr = self.readInput()
         
+        self.exposure = Exposure()
         self.telescope = Telescope(telescopeName)
         self.config=specsim.config('lvm', num_fibers=len(self.telescope.ifu.lensID))
-        self.exposure = Exposure()
         """ still need to define how user sets parameters of exposure and simulation"
         """
-        self.updateconfig()
 
 
 
@@ -270,16 +269,13 @@ class LVMSimulator(object):
         elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
-            """Deal with fluxType
-            """
-            lensra, lensdec = self.telescope.ifu2sky(self.exposure.ra, self.exposure.dec,self.expsosure.theta)
-
-            """missing part whereI sample cube at right position
-            """
+            lensra, lensdec = self.telescope.ifu2sky(self.exposure.ra, self.exposure.dec, self.expsosure.theta)
             mywcs = wcs.WCS(self.hdr)
-            pixelCoordinates = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
+            lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
 
             fluxout=np.zeros((nlens, len(waveout)))
+            for i in range(nlens):
+                fluxout[i,:]=self.dataconv[lenscubex[i], lenscubey[i],:]
 
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
@@ -297,6 +293,7 @@ class LVMSimulator(object):
         Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
+        self.updateconfig()
         self.simulator = specsim.simulator.Simulator(self.config)
         self.updatesimulator()
         self.simulator.simulate()
