@@ -22,7 +22,7 @@ class Telescope(object):
         self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
         self.apertureDict = {"LVM160-SCI-S":160}
         self.apertureAreaDict= {"LVM160-SCI-S":np.pi*160}
-        self.obstructionAreaDict = {"LVM160-SCI-S":0.3*self.apertureADict[self.name]} # This number is absolutely a guess.
+        self.obstructionAreaDict = {"LVM160-SCI-S":0.3*self.apertureAreaDict["LVM160-SCI-S"]} # This number is absolutely a guess.
         self.fRatioDict   = {"LVM160-SCI-S":6.2}
 
         self.name = name
@@ -30,7 +30,7 @@ class Telescope(object):
         self.siteCoordinates = self.siteCoordinatesDict[self.name]
         self.aperture = self.siteDict[self.name]
         self.apertureArea = self.apertureDict[self.name]
-        self.obstructionArea = self.obstructionDict[self.name]
+        self.obstructionArea = self.obstructionAreaDict[self.name]
         self.fRatio = self.fRatioDict[self.name]
         
         # IFU model object: ID, x, y, hexagon radius(center to corner)
@@ -38,4 +38,13 @@ class Telescope(object):
 
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
-        return(206265/self.apertureADict[self.name]/self.fRatioDict[self.name])
+        return(206265/self.apertureArea/self.fRatio)
+
+    def ifu2sky(self, ra,dec,theta):
+        thetarad=theta*np.pi/180. # position angle in radians
+        rotlensx=np.cos(thetarad)*self.ifu.lensx+np.sin(thetarad)*self.ifu.lensy
+        rotlensy=-np.sin(thetarad)*self.ifu.lensx+np.cos(thetarad)*self.ifu.lensy
+        lensdec=dec+rotlensy*self.platescale(rotlensx, rotlensy)/3600.
+        lensra=ra+rotlensx*self.platescale(rotlensx, rotlensy)/3600./np.cos(lensdec*np.pi/180.)
+        return(lensra, lensdec)
+
