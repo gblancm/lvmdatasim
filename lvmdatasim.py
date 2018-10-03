@@ -87,7 +87,6 @@ class LVMSimulator(object):
 
 
 
-        self.convdata = self.convolveInput()
 
 
     """
@@ -211,24 +210,33 @@ class LVMSimulator(object):
 
     
     def convolveInput(self):
-        if self.psfModel is not (False or None):
-            self.psfKernel= self.makePsfKernel()
-            if self.inputType == ('fitscube'):
-                """
-                Connvolve with a 2D PSF kernel, store it as convdata, save if requested, and return it
-                """
-                self.telescope.ifu.lensKernel=self.makeLensKernel()            
-                self.kernel=convolve_fft(self.telescope.ifu.lensKernel, self.psfKernel)
-            
-            elif self.inputType == ('lenscube'):
-                self.kernel=self.psfKernel 
-
+        """ results of call:
+        0,0 - no convolution
+        1,0 - psf convolution, no lens convolution
+        0,1 - no psf convolution. lens convolution
+        1,1 - psf and lens convolution
+        """
+        if self.inputType == "psfcube":
+            # if is a psfcube dont do anything (0,0)
+            convdata=self.data
+        else:
+            # if not psfcube it needs some sort of convolution
+            if self.psfModel is not (False or None):
+                # if psfModel defined then make psf kernel
+                self.psfKernel= self.makePsfKernel()
+                if self.inputType == ('fitscube'):
+                    # if its fitscube kernel is convolution of psf+lenslet (1,1)
+                    self.telescope.ifu.lensKernel=self.makeLensKernel()                
+                    self.kernel=convolve_fft(self.telescope.ifu.lensKernel, self.psfKernel)            
+                elif self.inputType == ('lenscube'):
+                    # if its lenscube kernel is only the psf (1,0)
+                    self.kernel=self.psfKernel 
+            else:
+                # if psfModel is not defined then kernel is lenslet only (0,1)
+                self.telescope.ifu.lensKernel=self.makeLensKernel()
+                self.kernel=self.telescope.ifu.lensKernel
             convdata = convolve_fft(self.data, self.kernel, normalize_kernel=True)
 
-        else:
-            # The data either pre-processed, or is in a format that does not require processing/convolution.
-           convdata=self.data
-        return convdata
 
     def getDataFluxes(self):
         """
@@ -287,11 +295,15 @@ class LVMSimulator(object):
                 """
                 fluxout *= lensareapix
 
-    def lvmSimulate(self):
+    def lvmSimulate(self, forceConv=False):
         
         """
         Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
+
+        if (self.convdata is None) or forceConve:
+            # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
+            self.convdata = self.convolveInput(convolveOnly)
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateconfig()
         self.simulator = specsim.simulator.Simulator(self.config)
