@@ -41,20 +41,31 @@ class IFU(object):
 
         if isinstance(self.ifuModel, (float, int)):
             if int(self.ifuModel) == self.ifuModel:
-                self.ifuModel = int(self.ifuModel)            
+                self.ifuModel = int(self.ifuModel)
+            else:
+                sys.exit("Number of elements requested is not a integer number")
             self.lensx = None
             self.lensy = None
             self.lensr = None
             self.cubex = None # this will be blank if the ifu model is read from a table
             self.cubey = None # this will be blank if the ifu model is read from a table
             self.ring = None # this MAY be blank if the ifu model is read from a table
-            self.Trans = 1.0
+            self.lensT = 1.0
             self.hexLayout = hexlib.Layout(hexlib.layout_flat, 1.0, hexlib.Point(0,0))
             self.mkIfu(N=self.ifuModel)
         elif isinstance(self.ifuModel, str):
             try:
-                ascii.read(self.ifuModel, format="commented_header", delimiter="\t")
-            sys.exit("Reading an ifuModel from a file is not yet defined.")
+                asciiIfu = ascii.read(self.ifuModel, format="commented_header", delimiter="\t")
+            except:
+                sys.exit("Reading an ifuModel from a file is not yet defined.")
+            try:
+                self.lensx = asciiIfu['lensx'] 
+                self.lensy = asciiIfu['lensy'] 
+                self.lensr = asciiIfu['lensr']
+                self.lensT = asciiIfu['lensT']
+            except:
+                sys.exit("IFU model read from %s does not contain a valid definition of lens positions")
+
 
 
     def mkIfu(self, N):
@@ -101,7 +112,6 @@ class IFU(object):
 
 
 def main():
-    tel = "LVM160-SCI-S"
     ifu = IFU(3)
     print(ifu.ifuModel)
 
