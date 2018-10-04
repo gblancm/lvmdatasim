@@ -62,7 +62,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, yamlfile='lvmdatasim.yaml'):
+    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, yamlfile='lvmdatasim.yaml', verbose=False):
         """ 
         Initialize for Simulator
         """
@@ -301,6 +301,8 @@ class LVMSimulator(object):
         """
         Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
+
+
 
         if (self.convdata is None) or forceConv:
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
