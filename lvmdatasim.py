@@ -66,7 +66,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, config, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1]):
+    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1]):
         """ 
         Initialize for Simulator
         """
@@ -105,7 +105,7 @@ class LVMSimulator(object):
             elif 'PIXSCALE' not in data[0].header.keys(): 
                 mywcs=wcs.WCS(data[0].header)
                 pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()
-                data.header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
+                data[0].header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
             return(data[0].data, data[0].header)
 
         elif self.inputType == 'fitsrss':

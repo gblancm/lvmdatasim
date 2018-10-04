@@ -27,7 +27,7 @@ class Telescope(object):
 
         self.name = name
         self.site = self.siteDict[self.name]
-        self.siteCoordinates = self.siteCoordinatesDict[self.name]
+        self.siteCoordinates = self.siteCoordinatesDict[self.site]
         self.aperture = self.siteDict[self.name]
         self.apertureArea = self.apertureDict[self.name]
         self.obstructionArea = self.obstructionAreaDict[self.name]
