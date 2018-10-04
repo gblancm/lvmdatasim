@@ -191,12 +191,12 @@ class LVMSimulator(object):
         in units of pixels of the array. The image will have dimensions of imgsize x imgsize and the hexagon will
         be at the integer center.
         """
-        rlensmm=self.telescope.ifu.lensr.mean()
+        rlensmm=np.mean(self.telescope.ifu.lensr)
         rlensarcsec=rlensmm*self.telescope.platescale()
         rlenspix=rlensarcsec/self.hdr['PIXSCALE']
         imgsize=2*rlenspix
         antialias=5
-        imgsize*=antialias
+        imgsize=int(imgsize*antialias)
         center = imgsize//2+1
         hexLayout = hexlib.Layout(hexlib.layout_pointy, rlenspix*antialias, hexlib.Point(center,center))
         polygon = hexlib.polygon_corners(hexLayout,hexlib.Hex(0,0,0))
