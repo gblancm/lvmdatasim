@@ -34,7 +34,7 @@ class Telescope(object):
         self.fRatio = self.fRatioDict[self.name]
         
         # IFU model object: ID, x, y, hexagon radius(center to corner)
-        self.ifu = IFU(self.name)
+        self.ifu = IFU(5)
 
     def platescale(self, x=0, y=0):
         """Returns the plate scale of a telescope with aperture diameter Ap, and f-ratio fRatio"""
