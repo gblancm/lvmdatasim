@@ -19,7 +19,7 @@ class Telescope(object):
         Uses hardcoded dictionaries and atributes are set using telescope name as key
         """
         self.siteDict = {"LVM160-SCI-S":"LCO"}
-        self.siteCoordinatesDict = {'LCO':[-29.0146, -17.6926]}
+        self.siteCoordinatesDict = {"LCO":[-29.0146, -17.6926]}
         self.apertureDict = {"LVM160-SCI-S":160}
         self.apertureAreaDict= {"LVM160-SCI-S":np.pi*160}
         self.obstructionAreaDict = {"LVM160-SCI-S":0.3*self.apertureAreaDict["LVM160-SCI-S"]} # This number is absolutely a guess.
