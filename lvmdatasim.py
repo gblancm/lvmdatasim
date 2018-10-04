@@ -16,7 +16,6 @@ import hexagonlib as hexlib
 from PIL import Image, ImageDraw
 from Telescope import Telescope
 import scipy.interpolate as interpolate
-from Exposure import Exposure
 
 try:
     sys.path.append(os.environ['SIMSPEC_DIR'])
@@ -66,7 +65,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1]):
+    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1], yamlfile='lvmdatasim.yaml'):
         """ 
         Initialize for Simulator
         """
@@ -79,13 +78,12 @@ class LVMSimulator(object):
 
         self.data, self.hdr = self.readInput()
         
-        self.exposure = Exposure()
         self.telescope = Telescope(telescopeName)
-        self.config=specsim.config('lvm', num_fibers=len(self.telescope.ifu.lensID))
         """ still need to define how user sets parameters of exposure and simulation"
         """
 
-
+        import defaultsimparam
+        self.simparam = defaultsimparam.default
 
 
 
@@ -123,6 +121,7 @@ class LVMSimulator(object):
         else:
             sys.exit('Input Type \"'+self.inputType+'\" not recognized.')
 
+   
     def makePsfKernel(self):
         try:
             pixscalecube = self.hdr['PIXSCALE']
@@ -178,13 +177,15 @@ class LVMSimulator(object):
         elif self.psfModel is False:
             return self.psfModel
 
-    def updateconfig(self):
-        """this method updates the specsim config object with the user defined parameters
-        """
 
-    def updatesimulator(self):
-        """this method updates the specsim simulator object with the user defined parameters
-        """
+    def updateyaml(self):
+        with open("lvmdatasimTemplate.yml", 'rb') as f:
+            data = f.read()  # produces single string
+        for key in self.simparam.keys():
+            data.replace("__%s__placeholder"%key, self.simparam[key])
+        with open(self.yamlfile, 'w') as f:
+            f.writelines(data)
+
 
     def makeLensKernel(self):
         """
@@ -281,6 +282,7 @@ class LVMSimulator(object):
             mywcs = wcs.WCS(self.hdr)
             lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
 
+            # We will improve this with a cube of references
             fluxout=np.zeros((nlens, len(waveout)))
             for i in range(nlens):
                 fluxout[i,:]=self.dataconv[lenscubex[i], lenscubey[i],:]
@@ -295,6 +297,8 @@ class LVMSimulator(object):
                 """
                 fluxout *= lensareapix
 
+        return fluxout
+
     def lvmSimulate(self, forceConv=False):
         
         """
@@ -305,9 +309,9 @@ class LVMSimulator(object):
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
             self.convdata = self.convolveInput(convolveOnly)
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
-        self.updateconfig()
-        self.simulator = specsim.simulator.Simulator(self.config)
-        self.updatesimulator()
+        self.updateyaml()
+        self.simulator = specsim.simulator.Simulator(self.yamlfile)
+        # TO DO: add right keywords to simultate so we pass on fluxes array
         self.simulator.simulate()
 
 
