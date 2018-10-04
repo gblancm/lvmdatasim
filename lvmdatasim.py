@@ -72,6 +72,7 @@ class LVMSimulator(object):
         self.telescopeName = telescopeName
         self.psfModel = psfModel
         self.saveConvCube = saveConvCube
+        self.yamlfile=yamlfile
 
         self.data, self.hdr = self.readInput()
         
@@ -129,7 +130,7 @@ class LVMSimulator(object):
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
+            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, y_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
 
         elif isinstance(self.psfModel, list):
             """
@@ -303,7 +304,7 @@ class LVMSimulator(object):
 
         if (self.convdata is None) or forceConve:
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
-            self.convdata = self.convolveInput(convolveOnly)
+            self.convdata = self.convolveInput()
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateyaml()
         self.simulator = specsim.simulator.Simulator(self.yamlfile)
