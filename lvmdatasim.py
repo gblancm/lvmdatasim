@@ -304,7 +304,7 @@ class LVMSimulator(object):
 
         if (self.convdata is None) or forceConv:
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
-            self.convdata = self.convolveInput()
+            self.convolveInput()
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateyaml()
         self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
