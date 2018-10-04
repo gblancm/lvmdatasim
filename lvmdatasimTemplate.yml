@@ -23,7 +23,7 @@ verbose: verbose__placeholder # Default:yes
 #   Response 3565.400 5952.600 5621.700 7744.300 7431.000 9838.000
 #        CCD 3569.000 5949.000 5625.000 7741.000 7435.000 9834.000
 wavelength_grid:
-    unit: waveUnit__placeholder # Default:Angstrom
+    unit: Angstrom
     min: minWave__placeholder # Default:3550.0
     max: maxWave__placeholder # Default:9850.0
     step: waveStep__placeholder # Default:0.1
