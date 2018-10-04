@@ -216,7 +216,7 @@ class LVMSimulator(object):
         """
         if self.inputType == "psfcube":
             # if is a psfcube dont do anything (0,0)
-            convdata=self.data
+            self.convdata=self.data
         else:
             # if not psfcube it needs some sort of convolution
             if self.psfModel is not (False or None):
@@ -233,7 +233,7 @@ class LVMSimulator(object):
                 # if psfModel is not defined then kernel is lenslet only (0,1)
                 self.telescope.ifu.lensKernel=self.makeLensKernel()
                 self.kernel=self.telescope.ifu.lensKernel
-            convdata = convolve_fft(self.data, self.kernel, normalize_kernel=True)
+            self.convdata = convolve_fft(self.data, self.kernel, normalize_kernel=True)
 
 
     def getDataFluxes(self):
@@ -254,7 +254,7 @@ class LVMSimulator(object):
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
-        waveout=self.config.wavelength.value
+        waveout=self.simulator.wavelength # get this wavelength from the simspec config member
         nlens=len(self.telescope.ifu.lensID)
         lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
         lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
@@ -275,14 +275,14 @@ class LVMSimulator(object):
         elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
-            lensra, lensdec = self.telescope.ifu2sky(self.exposure.ra, self.exposure.dec, self.expsosure.theta)
+            lensra, lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
             mywcs = wcs.WCS(self.hdr)
             lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
 
             # We will improve this with a cube of references
             fluxout=np.zeros((nlens, len(waveout)))
             for i in range(nlens):
-                fluxout[i,:]=self.dataconv[lenscubex[i], lenscubey[i],:]
+                fluxout[i,:]=self.convdata[lenscubex[i], lenscubey[i],:]
 
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
@@ -302,7 +302,7 @@ class LVMSimulator(object):
         Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
         """
 
-        if (self.convdata is None) or forceConve:
+        if (self.convdata is None) or forceConv:
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
             self.convdata = self.convolveInput()
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
