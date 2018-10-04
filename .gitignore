@@ -1,3 +1,4 @@
 *.pyc
 specsim
 specsim/*
+*.ipynb
