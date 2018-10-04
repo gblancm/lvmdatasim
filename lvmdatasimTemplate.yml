@@ -67,8 +67,8 @@ atmosphere:
     seeing:
         # The seeing is assumed to scale with wavelength as
         # fwhm(wlen) = fwhm_ref * (wlen / wlen_ref) ** -0.2
-        fwhm_ref: seeing_fwhm_ref__placeholder # Default:1.1 arcsec
-        wlen_ref: seeing_wlen_ref__placeholder # Default:6355 Angstrom
+        fwhm_ref: seeing_fwhm_ref__placeholder arcsec # Default:1.1 arcsec
+        wlen_ref: seeing_wlen_ref__placeholder Angstron # Default:6355 Angstrom
         # The seeing PSF is modeled as a Moffat profile.
         moffat_beta: seeing_moffat_beta__placeholder # Default:3.5
     # Surface brightness of scattered moonlight.
@@ -93,9 +93,9 @@ atmosphere:
             moon_phase: moon_phase__placeholder # Default:0.5
             # Zenith angles of the moon. An angle > 90 (below the horizon)
             # will zero the scattered moon contribution.
-            moon_zenith: moon_zenith__placeholder # Default:100 deg
+            moon_zenith: moon_zenith__placeholder deg # Default:100 deg
             # Separation angle between the observation and moon.
-            separation_angle: separation_angle__placeholder # Default:60 deg
+            separation_angle: separation_angle__placeholder deg # Default:60 deg
     # Zenith extinction coefficients.
     extinction:
         table:
@@ -119,11 +119,11 @@ instrument:
     name: telescope_name__placeholder # Default:LVM
     constants:
         # These values are copied from desimodel/data/desi.yaml
-        primary_mirror_diameter: tel_mirror_diameter__placeholder # Default:1.0 m
-        obscuration_diameter: tel_obscuration_diameter__placeholder # Default:0.47 m
-        support_width: tel_support_width__placeholder # Default:0.08 m
-        fiber_diameter: tel_fiber_diameter__placeholder # Default:107.0 um
-        field_radius: tel_field_radius__placeholder # Default:414.0 mm
+        primary_mirror_diameter: tel_mirror_diameter__placeholder m # Default:1.0 m
+        obscuration_diameter: tel_obscuration_diameter__placeholder m # Default:0.47 m
+        support_width: tel_support_width__placeholder m # Default:0.08 m
+        fiber_diameter: tel_fiber_diameter__placeholder um # Default:107.0 um
+        field_radius: tel_field_radius__placeholder mm # Default:414.0 mm
     plate_scale:
         table:
             path: focalplane/platescale.txt
@@ -197,21 +197,21 @@ instrument:
         # 'Band-limited chromatic shift microns' (already included in radial centroid offsets)
         # and 'FVC corrector optics figure error' (a static term)
         # is 7.26 um = 5.1 * sqrt(2) um
-        sigma1d: instr_sigma1d__placeholder # Default:5.1 um
+        sigma1d: instr_sigma1d__placeholder um # Default:5.1 um
     cameras:
         b:
             constants:
                 # These values are copied from desimodel/data/desi.yaml
-                read_noise: b_read_noise__placeholder # Default:3.0 electron/pixel**2
+                read_noise: b_read_noise__placeholder  electron/pixel**2 # Default:3.0 electron/pixel**2
                 # We treat "pixel" as a linear unit, so we need pixel**2 here.
-                dark_current: b_dark_current__placeholder # Default:3.0 electron/(hour pixel**2)
-                gain: b_gain__placeholder # Default:1.0 electron/adu
+                dark_current: b_dark_current__placeholder electron/(hour pixel**2) # Default:3.0 electron/(hour pixel**2)
+                gain: b_gain__placeholder electron/adu # Default:1.0 electron/adu
                 # Clip the resolution matrix at this number of sigmas.
                 num_sigmas_clip: 5
                 # Output pixels are used to report simulation results but are
                 # not the physical pixels.  The output pixel size must be a
                 # multiple of wavelength_grid.step.
-                output_pixel_size: b_output_pixel_size__placeholder # Default:0.5 Angstrom
+                output_pixel_size: b_output_pixel_size__placeholder Angstrom # Default:0.5 Angstrom
             ccd:
                 table:
                     path: b_psf__placeholder # Default:specpsf/psf-quicksim.fits
@@ -239,16 +239,16 @@ instrument:
         r:
             constants:
                 # These values are copied from desimodel/data/desi.yaml
-                read_noise: r_read_noise__placeholder # Default:2.9 electron/pixel**2
+                read_noise: r_read_noise__placeholder electron/pixel**2 # Default:2.9 electron/pixel**2
                 # We treat "pixel" as a linear unit, so we need pixel**2 here.
-                dark_current: r_dark_current__placeholder # Default:2.0 electron/(hour pixel**2)
-                gain: r_gain__placeholder # Default:1.0 electron/adu
+                dark_current: r_dark_current__placeholder  electron/(hour pixel**2) # Default:2.0 electron/(hour pixel**2)
+                gain: r_gain__placeholder electron/adu # Default:1.0 electron/adu
                 # Clip the resolution matrix at this number of sigmas.
                 num_sigmas_clip: 5
                 # Output pixels are used to report simulation results but are
                 # not the physical pixels.  The output pixel size must be a
                 # multiple of wavelength_grid.step.
-                output_pixel_size: 0.5 Angstrom
+                output_pixel_size: r_output_pixel_size__placeholder Angstrom # Default:0.5 Angstrom
             ccd:
                 table:
                     path: r_psf__placeholder # Default:specpsf/psf-quicksim.fits
@@ -276,10 +276,10 @@ instrument:
         z:
             constants:
                 # These values are copied from desimodel/data/desi.yaml
-                read_noise: z_read_noise__placeholder # Default:2.9 electron/pixel**2
+                read_noise: z_read_noise__placeholder electron/pixel**2 # Default:2.9 electron/pixel**2
                 # We treat "pixel" as a linear unit, so we need pixel**2 here.
-                dark_current: z_dark_current__placeholder # Default:2.0 electron/(hour pixel**2)
-                gain: z_gain__placeholder # Default:1.0 electron/adu
+                dark_current: z_dark_current__placeholder electron/(hour pixel**2) # Default:2.0 electron/(hour pixel**2)
+                gain: z_gain__placeholder electron/adu # Default:1.0 electron/adu
                 # Clip the resolution matrix at this number of sigmas.
                 num_sigmas_clip: 5
                 # Output pixels are used to report simulation results but are
@@ -375,7 +375,7 @@ observation:
         #pressure: 79 kPa
         # Air temperature at the telescope used to calculate atmospheric
         # refraction (but only has a small effect).
-        temperature: temperature__placeholder # Default:15 deg_C
+        temperature: temperature__placeholder deg_C # Default:15 deg_C
         # Relative humidity (0-1) at the telescope used to calculate atmospheric
         # refraction (but only has a small effect).
         relative_humidity: realative_humidity__placeholder # Default:0.
