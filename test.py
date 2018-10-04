@@ -1,4 +1,4 @@
-import 
+import lvmdatasim
 
 input='./testInput/small.sii.fits'
 
