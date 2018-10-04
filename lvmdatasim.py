@@ -130,8 +130,7 @@ class LVMSimulator(object):
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            return(Gaussian2DKernel(pixscalecube*self.psfModel/2.355, mode='oversample', factor=25
-            ))
+            return(Gaussian2DKernel(pixscalecube*self.psfModel/2.355, mode='oversample', factor=25))
 
         elif isinstance(self.psfModel, list):
             """
