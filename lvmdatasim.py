@@ -130,7 +130,8 @@ class LVMSimulator(object):
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
+            return(Gaussian2DKernel(pixscalecube*self.psfModel/2.355, mode='oversample', factor=25
+            ))
 
         elif isinstance(self.psfModel, list):
             """
@@ -143,7 +144,7 @@ class LVMSimulator(object):
                 (a_stddev, b_stddev) = (a_stddev*pixscalecube, b_stddev*pixscalecube)
                 theta = self.psfModel[2]
 
-                return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='integral'))
+                return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='oversample', factor=25))
             else:
                 sys.exit("The provided PSF model is a list, but not of length three. It can not be interpreted as a_FWHM, b_FWHM, theta")
 
