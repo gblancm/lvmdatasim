@@ -176,7 +176,7 @@ class LVMSimulator(object):
 
 
     def updateyaml(self):
-        with open("lvmdatasimTemplate.yml", 'rb') as f:
+        with open("lvmdatasimTemplate.yaml", 'rb') as f:
             data = f.read()  # produces single string
         for key in self.simparam.keys():
             data.replace("__%s__placeholder"%key, self.simparam[key])
