@@ -130,7 +130,7 @@ class LVMSimulator(object):
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, y_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
+            return(Gaussian2DKernel(x_stddev=pixscalecube*self.psfModel/2.355, mode='integral'))
 
         elif isinstance(self.psfModel, list):
             """
@@ -307,7 +307,7 @@ class LVMSimulator(object):
             self.convdata = self.convolveInput()
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateyaml()
-        self.simulator = specsim.simulator.Simulator(self.yamlfile)
+        self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
         # TO DO: add right keywords to simultate so we pass on fluxes array
         self.simulator.simulate()
 
