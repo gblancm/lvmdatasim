@@ -81,6 +81,7 @@ class LVMSimulator(object):
 
         import lvmdatasimdefaults
         self.simparam = lvmdatasimdefaults.param
+        self.convdata = None
 
     """
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
@@ -294,7 +295,7 @@ class LVMSimulator(object):
 
         return fluxout
 
-    def lvmSimulate(self, forceConv=False):
+    def simulate(self, forceConv=False):
         
         """
         Measure fluxes for each spaxel, create the simspec Simulator object, update it with user defined parameters, and run simulation
