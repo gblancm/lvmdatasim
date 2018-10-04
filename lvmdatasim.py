@@ -33,9 +33,6 @@ class LVMSimulator(object):
 
     Parameters:
     -----------
-    
-    config: str
-        Configuration file name for simspec
         
     input: str
         path to input data file
@@ -51,12 +48,12 @@ class LVMSimulator(object):
         If None or False no psf convolution is performed
 
     inputType: str
-    	Can be one of the following:
-    	'fitscube' = native input datacube in fits format
-    	'lenscube' = lenslet convolved datacube in fits format
-    	'psfcube' = psf+lenslet convolved datacube in fits format
-    	'fitsrss' = RSS file with one spectrum per lenslet, first row is wavelength in A
-    	'asciirss' = ascii file with one spectrum per lenslet, first column is wavelength in A, headers must be commented with "#"
+        Can be one of the following:
+        'fitscube' = native input datacube in fits format
+        'lenscube' = lenslet convolved datacube in fits format
+        'psfcube' = psf+lenslet convolved datacube in fits format
+        'fitsrss' = RSS file with one spectrum per lenslet, first row is wavelength in A
+        'asciirss' = ascii file with one spectrum per lenslet, first column is wavelength in A, headers must be commented with "#"
 
     fluxType: str
         Can be one of the following:
@@ -65,7 +62,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, wavegrid=[3550.0, 9850.0, 0.1], yamlfile='lvmdatasim.yaml'):
+    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, yamlfile='lvmdatasim.yaml'):
         """ 
         Initialize for Simulator
         """
