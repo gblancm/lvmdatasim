@@ -307,7 +307,7 @@ class LVMSimulator(object):
             self.convdata = self.convolveInput()
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateyaml()
-        self.simulator = specsim.simulator.Simulator(self.yamlfile)
+        self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
         # TO DO: add right keywords to simultate so we pass on fluxes array
         self.simulator.simulate()
 
