@@ -79,10 +79,8 @@ class LVMSimulator(object):
         """ still need to define how user sets parameters of exposure and simulation"
         """
 
-        import defaultsimparam
-        self.simparam = defaultsimparam.default
-
-
+        import lvmdatasimdefaults
+        self.simparam = lvmdatasimdefaults.param
 
     """
     Lensed cube should store PA in header, and if imputType=lenscube or psfcube code should check that PA in header is consistent with PA of observation, otherwise raise error.
