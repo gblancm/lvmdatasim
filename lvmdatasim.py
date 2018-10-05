@@ -1,8 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-"""
-Top-level manager for LVM spectroscopic simulation.
-"""
-
 from __future__ import print_function, division
 import sys
 import os
@@ -75,7 +70,7 @@ class LVMSimulator(object):
         self.yamlfile=yamlfile
 
         self.data, self.hdr = self.readInput()
-        
+      
         self.telescope = Telescope(telescopeName)
         """ still need to define how user sets parameters of exposure and simulation"
         """
@@ -99,7 +94,7 @@ class LVMSimulator(object):
                 sys.exit('No WCS Information in input FITS header')
             elif 'PIXSCALE' not in data[0].header.keys(): 
                 mywcs=wcs.WCS(data[0].header)
-                pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()
+                pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()*3600.
                 data[0].header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
             return(data[0].data, data[0].header)
 
@@ -254,7 +249,7 @@ class LVMSimulator(object):
         potentially self.skycor and telescope model, otherwise use pixel
         """
 
-        waveout=self.simulator.wavelength # get this wavelength from the simspec config member
+        waveout=self.simulator.simulated['wavelength'].data # get this wavelength from the simspec config member
         nlens=len(self.telescope.ifu.lensID)
         lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
         lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
@@ -305,9 +300,9 @@ class LVMSimulator(object):
         if (self.convdata is None) or forceConv:
             # If convdata does not exist or the user wants to reconvolve the input (i.e. forceConv=True) then convolve the input
             self.convolveInput()
-        self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         self.updateyaml()
         self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
+        self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         # TO DO: add right keywords to simultate so we pass on fluxes array
         self.simulator.simulate()
 

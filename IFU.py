@@ -109,7 +109,8 @@ class IFU(object):
             (x,y) = hexlib.hex_to_pixel(self.hexLayout, cubeCoord)
             self.lensx.append(x)
             self.lensy.append(y)
-            self.lensr.append((x**2+y**2)**0.5)
+            #self.lensr.append((x**2+y**2)**0.5)
+            self.lensr.append(0.160)
 
 
 def main():
