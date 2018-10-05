@@ -171,10 +171,10 @@ class LVMSimulator(object):
 
 
     def updateyaml(self):
-        with open("lvmdatasimTemplate.yaml", 'rb') as f:
+        with open("lvmdatasimTemplate.yaml", 'r') as f:
             data = f.read()  # produces single string
         for key in self.simparam.keys():
-            data.replace("__%s__placeholder"%key, self.simparam[key])
+            data.replace("%s__placeholder"%key, self.simparam[key])
         with open(self.yamlfile, 'w') as f:
             f.writelines(data)
 
