@@ -96,7 +96,11 @@ class LVMSimulator(object):
                 mywcs=wcs.WCS(data[0].header)
                 pixscale=wcs.utils.proj_plane_pixel_scales(mywcs).mean()*3600.
                 data[0].header.set('PIXSCALE', pixscale, 'Pixel scale calculated from WCS by LVMSimulator')    
-            return(data[0].data, data[0].header)
+            if data[0].data.ndim == 3:
+                return(data[0].data, data[0].header)
+            elif data[0].data.ndim == 2:
+                ny, nx = np.shape(data[0].data)
+                return(data[0].data.reshape(ny, nx, 1), data[0].header)
 
         elif self.inputType == 'fitsrss':
             """ 
@@ -228,7 +232,9 @@ class LVMSimulator(object):
                 # if psfModel is not defined then kernel is lenslet only (0,1)
                 self.telescope.ifu.lensKernel=self.makeLensKernel()
                 self.kernel=self.telescope.ifu.lensKernel
-            self.convdata = convolve_fft(self.data, self.kernel, normalize_kernel=True)
+            self.convdata=np.zeros(np.shape(self.data))
+            for i in range(np.shape(self.data)[2]):
+                self.convdata[:,:,i] = convolve_fft(self.data[:,:,i], self.kernel, normalize_kernel=True)
 
 
     def getDataFluxes(self):
@@ -265,14 +271,15 @@ class LVMSimulator(object):
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
-                fluxesout *= lensareasky 
+                fluxesout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxout)[1], axis=1)
+
 
         elif self.inputType in ['fitscube', 'lenscube', 'psfcube']:
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
             lensra, lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
             mywcs = wcs.WCS(self.hdr)
-            lenscubex, lenscubey = np.int(np.array(mywcs.wcs_world2pix(lensra, lensdec, 1)))
+            lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1)).astype(int)
 
             # We will improve this with a cube of references
             fluxout=np.zeros((nlens, len(waveout)))
@@ -282,12 +289,12 @@ class LVMSimulator(object):
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
-                fluxout *= lensareasky
+                fluxout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxout)[1], axis=1)
 
             elif self.fluxType == 'flux':
                 """Multiply input by  spaxel area in pixels
                 """
-                fluxout *= lensareapix
+                fluxout *= np.repeat(lensareapix[:,np.newaxis], np.shape(fluxout)[1], axis=1)
 
         return fluxout
 
