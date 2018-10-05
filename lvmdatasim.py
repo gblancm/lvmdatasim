@@ -17,7 +17,7 @@ try:
 except:
     sys.exit("No SIMSPEC_DIR environmental variable defined. Good luck!")
 try:
-    import specsim
+    import specsim.simulator
 except:
     sys.exit("The SIMSPEC_DIR environmental varible is defined, but the import of specsim failed: Wrong path or specsim is not installed")
     
@@ -174,7 +174,7 @@ class LVMSimulator(object):
         with open("lvmdatasimTemplate.yaml", 'r') as f:
             data = f.read()  # produces single string
         for key in self.simparam.keys():
-            data.replace("%s__placeholder"%key, self.simparam[key])
+            data.replace("%s__placeholder"%key, str(self.simparam[key]))
         with open(self.yamlfile, 'w') as f:
             f.writelines(data)
 
