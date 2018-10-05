@@ -84,7 +84,7 @@ class LVMSimulator(object):
     """
 
     def readInput(self):
-        if self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
+        if self.inputType in ['fitscube', 'lenscube', 'psfcube']:
             """
             - Read self.input as fits cube and return data and header
             - Add a PIXSCALE keyword to the header if not present before passing it on
@@ -125,7 +125,7 @@ class LVMSimulator(object):
             Make Symmetric Gaussian 2D PSF
             - Need to calculate the scaling between the plate scale and the PSF model
             """
-            return(Gaussian2DKernel(pixscalecube*self.psfModel/2.355, mode='oversample', factor=25))
+            return(Gaussian2DKernel(self.psfModel/2.355/pixscalecube, mode='oversample', factor=25))
 
         elif isinstance(self.psfModel, list):
             """
@@ -135,7 +135,7 @@ class LVMSimulator(object):
             if len(self.psfModel) == 3:
                 #Extract PSF model parameters from the list
                 (a_stddev, b_stddev) = self.psfModel[0:2]/2.355
-                (a_stddev, b_stddev) = (a_stddev*pixscalecube, b_stddev*pixscalecube)
+                (a_stddev, b_stddev) = (a_stddev/pixscalecube, b_stddev/pixscalecube)
                 theta = self.psfModel[2]
 
                 return(Gaussian2DKernel(x_stddev=a_stddev, y_stddev=b_stddev, theta=theta, mode='oversample', factor=25))
@@ -256,7 +256,7 @@ class LVMSimulator(object):
         lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
         lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
                 
-        if self.inputType == ('fitsrss' or 'asciirss'):
+        if self.inputType in ['fitsrss', 'asciirss']:
             wavein=self.convdata[0,:]
             fluxesin=self.convdata[1:,:]            
             interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
@@ -267,7 +267,7 @@ class LVMSimulator(object):
                 """
                 fluxesout *= lensareasky 
 
-        elif self.inputType == ('fitscube' or 'lenscube' or 'psfcube'):
+        elif self.inputType in ['fitscube', 'lenscube', 'psfcube']:
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
             lensra, lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
