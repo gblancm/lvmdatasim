@@ -2,7 +2,7 @@ name: LVM QuickSim
 
 # The base path is pre-pended to all non-absolute path values below.
 # {...} will be expanded using environment variables.
-base_path: '{LVMMODEL}/data'
+base_path: '{LVMMODEL}'
 
 # Be verbose during the simulation?
 verbose: verbose__placeholder # Default:yes 
