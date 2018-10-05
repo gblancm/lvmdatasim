@@ -309,9 +309,9 @@ instrument:
 # The source configuration is interpreted and validated by the
 # specsim.source module.
 source:
-    name: 22nd AB magnitude reference
+    name: lvmspectrum
     # The type is only used when instrument.fiberloss.method is 'table'.
-    type: qso
+    type: perfect
     table:
         format: ascii
         path: spectra/spec-ABmag22.0.dat

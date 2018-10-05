@@ -271,7 +271,7 @@ class LVMSimulator(object):
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
-                fluxesout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxout)[1], axis=1)
+                fluxesout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxesout)[1], axis=1)
 
 
         elif self.inputType in ['fitscube', 'lenscube', 'psfcube']:
@@ -281,22 +281,28 @@ class LVMSimulator(object):
             mywcs = wcs.WCS(self.hdr)
             lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1)).astype(int)
 
+            wavein=np.array([6563.])
+            # The above is a placeholder
+
             # We will improve this with a cube of references
-            fluxout=np.zeros((nlens, len(waveout)))
+            fluxesin=np.zeros((nlens, len(wavein)))
             for i in range(nlens):
-                fluxout[i,:]=self.convdata[lenscubex[i], lenscubey[i],:]
+                fluxesin[i,:]=self.convdata[lenscubex[i], lenscubey[i],:]
+
+            interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
+            fluxesout=interp(np.range(nlens), waveout)
 
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
-                fluxout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxout)[1], axis=1)
+                fluxesout *= np.repeat(lensareasky[:,np.newaxis], np.shape(fluxesout)[1], axis=1)
 
             elif self.fluxType == 'flux':
                 """Multiply input by  spaxel area in pixels
                 """
-                fluxout *= np.repeat(lensareapix[:,np.newaxis], np.shape(fluxout)[1], axis=1)
+                fluxesout *= np.repeat(lensareapix[:,np.newaxis], np.shape(fluxesout)[1], axis=1)
 
-        return fluxout
+        return fluxesout
 
     def simulate(self, forceConv=False):
         
