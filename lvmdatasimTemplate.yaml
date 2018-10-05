@@ -47,20 +47,20 @@ atmosphere:
                 dark: spectra/spec-sky.dat
                 grey: spectra/spec-sky-grey.dat
                 bright: spectra/spec-sky-bright.dat
-                moonPhase1: spectra/spec-sky-moonphase1.dat
-                moonPhase2: spectra/spec-sky-moonphase2.dat
-                moonPhase3: spectra/spec-sky-moonphase3.dat
-                moonPhase4: spectra/spec-sky-moonphase4.dat
-                moonPhase5: spectra/spec-sky-moonphase5.dat
-                moonPhase6: spectra/spec-sky-moonphase6.dat
-                moonPhase7: spectra/spec-sky-moonphase7.dat
-                moonPhase8: spectra/spec-sky-moonphase8.dat
-                moonPhase9: spectra/spec-sky-moonphase9.dat
-                moonPhase10: spectra/spec-sky-moonphase10.dat
-                moonPhase11: spectra/spec-sky-moonphase11.dat
-                moonPhase12: spectra/spec-sky-moonphase12.dat
-                moonPhase13: spectra/spec-sky-moonphase13.dat
-                moonPhase14: spectra/spec-sky-moonphase14.dat
+                # moonPhase1: spectra/spec-sky-moonphase1.dat
+                # moonPhase2: spectra/spec-sky-moonphase2.dat
+                # moonPhase3: spectra/spec-sky-moonphase3.dat
+                # moonPhase4: spectra/spec-sky-moonphase4.dat
+                # moonPhase5: spectra/spec-sky-moonphase5.dat
+                # moonPhase6: spectra/spec-sky-moonphase6.dat
+                # moonPhase7: spectra/spec-sky-moonphase7.dat
+                # moonPhase8: spectra/spec-sky-moonphase8.dat
+                # moonPhase9: spectra/spec-sky-moonphase9.dat
+                # moonPhase10: spectra/spec-sky-moonphase10.dat
+                # moonPhase11: spectra/spec-sky-moonphase11.dat
+                # moonPhase12: spectra/spec-sky-moonphase12.dat
+                # moonPhase13: spectra/spec-sky-moonphase13.dat
+                # moonPhase14: spectra/spec-sky-moonphase14.dat
         # Specify the current condition.
         condition: sky_conditions__placeholder # Default:dark
     # Atmospheric seeing (only used when instrument.fiberloss.method = galsim)
@@ -68,7 +68,7 @@ atmosphere:
         # The seeing is assumed to scale with wavelength as
         # fwhm(wlen) = fwhm_ref * (wlen / wlen_ref) ** -0.2
         fwhm_ref: seeing_fwhm_ref__placeholder arcsec # Default:1.1 arcsec
-        wlen_ref: seeing_wlen_ref__placeholder Angstron # Default:6355 Angstrom
+        wlen_ref: seeing_wlen_ref__placeholder Angstrom # Default:6355 Angstrom
         # The seeing PSF is modeled as a Moffat profile.
         moffat_beta: seeing_moffat_beta__placeholder # Default:3.5
     # Surface brightness of scattered moonlight.
@@ -148,11 +148,6 @@ instrument:
             format: ascii
             paths:
                 # Each path corresponds to a different source type.
-                qso: throughput/fiberloss-qso.dat
-                elg: throughput/fiberloss-elg.dat
-                lrg: throughput/fiberloss-lrg.dat
-                star: throughput/fiberloss-star.dat
-                sky: throughput/fiberloss-sky.dat
                 perfect: throughput/fiberloss-perfect.dat
             columns:
                 wavelength: { index: 0, unit: Angstrom }
@@ -160,7 +155,7 @@ instrument:
         # Fits file of precomputed galsim fiber acceptance
         # the fits file is created with specsim/fitgalsim.py
         # the fits file is read with specsim/fastfiberacceptance.py
-        fast_fiber_acceptance_path: throughput/galsim-fiber-acceptance.fits
+        # fast_fiber_acceptance_path: throughput/galsim-fiber-acceptance.fits
     blur:
         # Read RMS blur values tabulated as a function of field angle and
         # wavelength, and derived from ray tracing simulations.  For details,
@@ -285,7 +280,7 @@ instrument:
                 # Output pixels are used to report simulation results but are
                 # not the physical pixels.  The output pixel size must be a
                 # multiple of wavelength_grid.step.
-                output_pixel_size: z_output_pixel_size__placeholder # Default:0.5 Angstrom
+                output_pixel_size: z_output_pixel_size__placeholder Angstrom # Default:0.5 Angstrom
             ccd:
                 table:
                     path: z_psf__placeholder # Default:specpsf/psf-quicksim.fits
@@ -368,7 +363,7 @@ source:
 observation:
     observatory: observatory__placeholder # Default:APO
     constants:
-        exposure_time: exposure_time__placeholder # Default:1000.0 s
+        exposure_time: exposure_time__placeholder s # Default:1000.0 s
         # Atmospheric pressure at the telescope (not at sea level) used
         # to calculate atmospheric refraction.  Leave commented out to use a
         # nominal value calculated for the observatory elevation.

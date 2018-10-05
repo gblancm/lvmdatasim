@@ -57,7 +57,7 @@ class LVMSimulator(object):
 
     """
 
-    def __init__ (self, input, telescopeName, psfModel, inputType='fitscube', fluxType='intensity', saveConvCube=True, yamlfile='lvmdatasim.yaml'):
+    def __init__ (self, input, telescopeName, psfModel=1.0, inputType='fitscube', fluxType='intensity', saveConvCube=True, yamlfile='lvmdatasim.yaml'):
         """ 
         Initialize for Simulator
         """
@@ -251,9 +251,9 @@ class LVMSimulator(object):
 
         waveout=self.simulator.simulated['wavelength'].data # get this wavelength from the simspec config member
         nlens=len(self.telescope.ifu.lensID)
-        lensrsky=self.telescope.ifu.lensr*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
+        lensrsky=np.array(self.telescope.ifu.lensr)*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
         lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
-        lensrpix=self.telescope.ifu.lensr*self.hdr['PIXSCALE']
+        lensrpix=np.array(self.telescope.ifu.lensr)*self.hdr['PIXSCALE']
         lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
                 
         if self.inputType in ['fitsrss', 'asciirss']:
@@ -272,7 +272,7 @@ class LVMSimulator(object):
             # resample data to output wavelength sampling
             lensra, lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
             mywcs = wcs.WCS(self.hdr)
-            lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1))
+            lenscubex, lenscubey = np.int(np.array(mywcs.wcs_world2pix(lensra, lensdec, 1)))
 
             # We will improve this with a cube of references
             fluxout=np.zeros((nlens, len(waveout)))

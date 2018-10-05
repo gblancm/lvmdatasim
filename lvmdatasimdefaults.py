@@ -1,4 +1,7 @@
 param = {
+    "ra":None,
+    "dec":None,
+    "theta":None,
     "verbose":"yes",
     "minWave":3550.0,
     "maxWave":9850.0,
@@ -17,7 +20,7 @@ param = {
     "tel_support_width":0.08,
     "tel_fiber_diameter":107.0,
     "tel_field_radius":414.0,
-    "fiberloss_method":"perfect",
+    "fiberloss_method":"table",
     "instr_sigma1d":5.1,
     "b_read_noise":3.0, # electron/pixel**2
     "b_dark_current":3.0, # electron/(hour pixel**2)
@@ -28,6 +31,7 @@ param = {
     "r_read_noise":2.9, # electron/pixel**2
     "r_dark_current":2.0, # electron/(hour pixel**2)
     "r_gain":1.0, # electron/adu
+    "r_output_pixel_size":0.5,# Angstrom
     "r_psf":"specpsf/psf-quicksim.fits",
     "r_throughput":"throughput/thru-r.fits",
     "z_read_noise":2.9, # electron/pixel**2

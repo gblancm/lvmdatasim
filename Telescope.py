@@ -43,8 +43,8 @@ class Telescope(object):
 
     def ifu2sky(self, ra,dec,theta):
         thetarad=theta*np.pi/180. # position angle in radians
-        rotlensx=np.cos(thetarad)*self.ifu.lensx+np.sin(thetarad)*self.ifu.lensy
-        rotlensy=-np.sin(thetarad)*self.ifu.lensx+np.cos(thetarad)*self.ifu.lensy
+        rotlensx=np.cos(thetarad)*np.array(self.ifu.lensx)+np.sin(thetarad)*np.array(self.ifu.lensy)
+        rotlensy=-np.sin(thetarad)*np.array(self.ifu.lensx)+np.cos(thetarad)*np.array(self.ifu.lensy)
         lensdec=dec+rotlensy*self.platescale(rotlensx, rotlensy)/3600.
         lensra=ra+rotlensx*self.platescale(rotlensx, rotlensy)/3600./np.cos(lensdec*np.pi/180.)
         return(lensra, lensdec)
