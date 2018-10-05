@@ -11,6 +11,7 @@ mysim.simparam['dec']=-68.898
 mysim.simparam['theta']=0.0
 
 # Run simulatioon
+
 mysim.simulate()
 
 print("done")
