@@ -10,10 +10,10 @@ mysim.simparam['ra']=77.4873
 mysim.simparam['dec']=-68.898
 mysim.simparam['theta']=0.0
 
-# Set wavelength range for image
-mysim.simparam['minWave']=4500.
-mysim.simparam['maxWave']=7100.
-mysim.simparam['waveStep']=3.
+# # Set wavelength range for image
+# mysim.simparam['minWave']=4500.
+# mysim.simparam['maxWave']=7100.
+# mysim.simparam['waveStep']=3.
 
 # Run simulatioon
 

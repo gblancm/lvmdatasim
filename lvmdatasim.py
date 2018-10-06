@@ -100,7 +100,7 @@ class LVMSimulator(object):
                 return(data[0].data, data[0].header)
             elif data[0].data.ndim == 2:
                 ny, nx = np.shape(data[0].data)
-                return(data[0].data.reshape(ny, nx, 1), data[0].header)
+                return(data[0].data.reshape(1, ny, nx), data[0].header)
 
         elif self.inputType == 'fitsrss':
             """ 
@@ -233,8 +233,8 @@ class LVMSimulator(object):
                 self.telescope.ifu.lensKernel=self.makeLensKernel()
                 self.kernel=self.telescope.ifu.lensKernel
             self.convdata=np.zeros(np.shape(self.data))
-            for i in range(np.shape(self.data)[2]):
-                self.convdata[:,:,i] = convolve_fft(self.data[:,:,i], self.kernel, normalize_kernel=True)
+            for i in range(np.shape(self.data)[0]):
+                self.convdata[i,:,:] = convolve_fft(self.data[i,:,:], self.kernel, normalize_kernel=True)
 
 
     def getDataFluxes(self):
@@ -259,7 +259,7 @@ class LVMSimulator(object):
         nlens=len(self.telescope.ifu.lensID)
         lensrsky=np.array(self.telescope.ifu.lensr)*self.telescope.platescale(self.telescope.ifu.lensx, self.telescope.ifu.lensy)
         lensareasky=3*np.sqrt(3)*lensrsky**2/2 # lenslet area in arcsec2
-        lensrpix=np.array(self.telescope.ifu.lensr)*self.hdr['PIXSCALE']
+        lensrpix=lensrsky/self.hdr['PIXSCALE']
         lensareapix=3*np.sqrt(3)*lensrpix**2/2 # lenslet area in number of pixels
                 
         if self.inputType in ['fitsrss', 'asciirss']:
@@ -277,21 +277,25 @@ class LVMSimulator(object):
         elif self.inputType in ['fitscube', 'lenscube', 'psfcube']:
             # compute lenslet coordinates, do mask, evaluate spectra
             # resample data to output wavelength sampling
-            lensra, lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
+            self.lensra, self.lensdec = self.telescope.ifu2sky(self.simparam['ra'], self.simparam['dec'], self.simparam['theta'])
             mywcs = wcs.WCS(self.hdr)
-            lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(lensra, lensdec, 1)).astype(int)
+            lenscubex, lenscubey = np.array(mywcs.wcs_world2pix(self.lensra, self.lensdec, 1)).astype(int)
 
-            wavein=np.array([6563.])
             # The above is a placeholder
 
             # We will improve this with a cube of references
-            fluxesin=np.zeros((nlens, len(wavein)))
+            fluxesin=np.zeros((nlens, np.shape(self.data)[0]))
             for i in range(nlens):
-                fluxesin[i,:]=self.convdata[lenscubex[i], lenscubey[i],:]
+                fluxesin[i,:]=self.convdata[:,lenscubex[i], lenscubey[i]]
 
-            interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
-            fluxesout=interp(np.range(nlens), waveout)
-
+            if np.shape(self.data)[0] > 1:
+                wavein=None
+                "need to read this from header"
+                interp=interpolate.RectBivariateSpline(np.range(nlens), wavein, fluxesin)
+                fluxesout=interp(np.range(nlens), waveout)
+            elif np.shape(self.data)[0] == 1:
+                fluxesout=np.repeat(fluxesin, len(waveout), axis=1)
+                # Maybe we want the image to pupulate an emission line instead of a continuum source
             if self.fluxType == 'intensity':
                 """Multiply input spaxel area in arcsec2
                 """
@@ -317,7 +321,7 @@ class LVMSimulator(object):
         self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         # TO DO: add right keywords to simultate so we pass on fluxes array
-        self.simulator.simulate()
+        self.simulator.simulate(source_fluxes=self.fluxes)
 
 
 def int_rebin(a, new_shape):
@@ -325,7 +329,7 @@ def int_rebin(a, new_shape):
     Resizes a 2d array by averaging or repeating elements,
     new dimensions must be integral factors of original dimensions
     Parameters
-    ----------
+    ---------
     a : array_like
         Input array.
     new_shape : tuple of int
