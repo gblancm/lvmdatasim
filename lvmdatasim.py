@@ -7,6 +7,7 @@ from astropy.io import fits as fits
 from astropy.convolution import convolve, convolve_fft, Gaussian2DKernel
 from reproject import reproject_interp
 import astropy.wcs as wcs
+import astropy.units as u
 import hexagonlib as hexlib
 from PIL import Image, ImageDraw
 from Telescope import Telescope
@@ -291,7 +292,7 @@ class LVMSimulator(object):
             # We will improve this with a cube of references
             fluxesin=np.zeros((nlens, np.shape(self.data)[0]))
             for i in range(nlens):
-                fluxesin[i,:]=self.convdata[:,lenscubex[i], lenscubey[i]]
+                fluxesin[i,:]=self.convdata[:,lenscubey[i], lenscubex[i]]
 
             if np.shape(self.data)[0] > 1:
                 wavein=None
@@ -326,7 +327,7 @@ class LVMSimulator(object):
         self.simulator = specsim.simulator.Simulator(self.yamlfile, num_fibers=len(self.telescope.ifu.lensID))
         self.fluxes = self.getDataFluxes() #intentionally broken, x and y are not defined
         # TO DO: add right keywords to simultate so we pass on fluxes array
-        self.simulator.simulate(source_fluxes=self.fluxes)
+        self.simulator.simulate(source_fluxes=self.fluxes*1e-17*u.erg/(u.s*u.cm**2*u.Angstrom))
 
 
 def int_rebin(a, new_shape):
