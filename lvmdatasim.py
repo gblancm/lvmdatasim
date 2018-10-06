@@ -17,6 +17,11 @@ try:
 except:
     sys.exit("No SIMSPEC_DIR environmental variable defined. Good luck!")
 try:
+    sys.path.append(os.environ['LVMMODEL'])
+except:
+    sys.exit("No LVMMODEL environmental variable defined. This is distributed with the LVMDataSim package")
+
+try:
     import specsim.simulator
 except:
     sys.exit("The SIMSPEC_DIR environmental varible is defined, but the import of specsim failed: Wrong path or specsim is not installed")
